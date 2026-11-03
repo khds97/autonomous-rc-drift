@@ -1,0 +1,6 @@
+<launch>
+
+  <node pkg="driftmodel" type="driftmodel_node" name="driftmodel_node" output="screen"/>
+  <include file="$(find depthai_examples)/launch/stereo_inertial_node.launch"/>
+
+</launch>
