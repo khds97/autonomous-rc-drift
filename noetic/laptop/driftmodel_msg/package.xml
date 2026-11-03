@@ -1,0 +1,16 @@
+<launch>
+
+   <node name="republish_left" type="republish" pkg="image_transport" args="compressed in:=/stereo_inertial_publisher/left/image_raw raw out:=/stereo_camera/left/image_raw" />
+   <node name="republish_right" type="republish" pkg="image_transport" args="compressed in:=/stereo_inertial_publisher/right/image_raw raw out:=/stereo_camera/right/image_raw" />
+    
+    <node name="rviz" pkg="rviz" type="rviz" args="-d $(find driftmodel)/demo.rviz" />
+    
+    <node pkg="driftmodel" name="controller" type="record.py" output="screen" />
+    
+    <node pkg="driftmodel" name="load_pose_flag" type="pose_flag.py" output="screen" />
+
+  <node name="vins_estimator" pkg="vins" type="vins_node" args="/home/ubuntu/vins_fusion_ws/src/VINS-Fusion/config/oak/oak.yaml" />
+  
+  <node name="loop_fusion_node" pkg="loop_fusion" type="loop_fusion_node" args="/home/ubuntu/vins_fusion_ws/src/VINS-Fusion/config/oak/oak.yaml" output="screen" />
+   
+</launch>
