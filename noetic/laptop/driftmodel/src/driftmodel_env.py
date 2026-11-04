@@ -103,9 +103,9 @@ class DriftEnv(Env):
         self.vy = odometry.twist.twist.linear.y
         self.vz = odometry.twist.twist.linear.z
         
-        self.ax = imu.angular_velocity.x
-        self.ay = imu.angular_velocity.y
-        self.az = imu.angular_velocity.z
+        self.ax = imu.linear_acceleration.x
+        self.ay = imu.linear_acceleration.y
+        self.az = imu.linear_acceleration.z
 
         self.gx = imu.angular_velocity.x
         self.gy = imu.angular_velocity.y
