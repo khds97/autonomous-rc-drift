@@ -174,3 +174,58 @@ This branch preserves the original ROS Noetic system and its distributed Raspber
 The camera configuration and onboard hardware arrangement were later redesigned as part of a new development direction, with software work moving toward ROS 2 Foxy. The Noetic implementation is retained as a reference for the earlier vehicle platform, sensor interface, communication flow, and learning-based drift-control experiments.
 
 This document describes the architecture represented by the current repository. Hardware wiring, firmware behavior, network configuration, and runtime launch dependencies should be checked against the actual vehicle setup before reproducing the system.
+
+## 9. Legacy Implementation Review — Known Issues
+
+The following issues were identified by reviewing the source code in this Noetic branch. They are documented as limitations of the legacy implementation; they are not presented as fixes already completed.
+
+The current development direction is to address these areas during the ROS 2 Foxy transition. The Noetic branch is retained as a historical reference, so the original implementation is intentionally preserved.
+
+### 9.1 Critical Runtime and Measurement Issues
+
+| Area | File | Observed issue | Potential impact |
+|---|---|---|---|
+| GPIO callback context | `RPi4/driftmodel/src/driver.cpp`, `RPi4/driftmodel/src/wheelSpeed.cpp`, `RPi4/driftmodel/src/pwm.cpp` | `callback_ex()` receives `this` from the `driver` object, while the static callback wrappers cast the user pointer to `wheelSpeed*` or `pwm*`. | The callback may access an object through an incompatible pointer, causing undefined behavior or memory corruption. The callback context should refer to the actual receiver object. |
+| Encoder sampling | `RPi4/driftmodel/src/wheelSpeed.cpp`, `RPi4/driftmodel/src/driver.cpp` | `calcRpm()` updates only after at least 100 ms, but `setZero()` is called after every sensor publish cycle (approximately 34 Hz). | Counts accumulated during cycles where RPM is not recalculated can be discarded. The calculated speed can therefore be inaccurate or remain stale. |
+| Encoder timing | `RPi4/driftmodel/src/wheelSpeed.cpp` | The speed calculation divides pulse counts by a fixed 0.1-second interval instead of using the measured elapsed time. | Timing jitter and delayed loop execution can introduce speed estimation error. |
+| Shared encoder counters | `RPi4/driftmodel/src/wheelSpeed.cpp` | GPIO callbacks update static counters while the ROS publishing loop reads and resets them, without synchronization. | Concurrent access can produce inconsistent measurements and data races. |
+
+### 9.2 Control and Communication Issues
+
+| Area | File | Observed issue | Potential impact |
+|---|---|---|---|
+| Command range validation | `laptop/driftmodel/src/usb_receiver.cpp` | The steering/throttle limits are checked in a single `if / else if` chain, so all bounds are not independently enforced in one call. The lower-bound throttle branch assigns to `throttle` instead of the `throttle_` argument. | Out-of-range command values may be transmitted. |
+| Serial receive parsing | `laptop/driftmodel/src/usb_receiver.cpp` | The code reads whatever bytes are currently available and parses them with `sscanf()`, without checking the number of successfully parsed fields or handling incomplete messages. | Partial serial packets can leave feedback variables stale or inconsistent. |
+| Serial initialization | `laptop/driftmodel/src/usb_receiver.cpp` | The serial port is opened in the constructor without local error handling. | A missing device or failed connection can interrupt node initialization. |
+
+### 9.3 Learning Pipeline and Environment Issues
+
+| Area | File | Observed issue | Potential impact |
+|---|---|---|---|
+| Training/inference preprocessing | `laptop/driftmodel/src/train_agent.py`, `laptop/driftmodel/src/dagger.py` | Training data is standardized with `StandardScaler`, but the scaler is not saved and DAgger inference passes the unscaled `next_state` to the model. | The model receives inputs with a different distribution during inference from the one used during training. |
+| Dataset split ratio | `laptop/driftmodel/src/train_agent.py` | `frac` is used as the validation fraction. The standalone training path passes `frac=0.9`, leaving 10% for training and 90% for validation. | The resulting training set may be much smaller than intended. |
+| Validation usage | `laptop/driftmodel/src/train_agent.py` | Validation inputs are prepared, but `train_model()` does not use `X_valid` or `y_valid` to evaluate the model. | There is no validation-based performance measurement or model-selection step in this training function. |
+| Reward state | `laptop/driftmodel/src/driftmodel_env.py` | `self.reward` is assigned conditionally in `step()` and is not reset at the beginning of each step. | A reward from a previous step can persist when none of the current conditions assigns a new value. |
+| Observation reset | `laptop/driftmodel/src/driftmodel_env.py` | `reset()` returns the existing observation without waiting for or constructing a fresh synchronized sensor observation. | The first state after reset may be stale. |
+| Model checkpoint handling | `laptop/driftmodel/src/dagger.py` | The script saves a newly initialized model to `model_4.pth` before starting the loop, even though the loop initially loads `model_3.pth`. | An existing `model_4.pth` checkpoint can be overwritten at startup. |
+
+### 9.4 Build and Package Configuration
+
+| Area | File | Observed issue | Potential impact |
+|---|---|---|---|
+| XML syntax | `laptop/driftmodel/package.xml` | The final `exec_depend` entry has an extra `>` after its closing tag. | The package manifest is malformed XML and may prevent package parsing or building. |
+| Initialization return values | `RPi4/driftmodel/src/driver.cpp` | `driver::init()` and `driver::deinit()` are declared to return `int`, but successful execution paths do not return a value. | Calling code cannot rely on a defined return value; this should be corrected when the driver lifecycle is redesigned. |
+
+### 9.5 Planned Direction for the Foxy Version
+
+The issues above will be treated as migration and redesign tasks rather than changes to the archived Noetic implementation.
+
+Planned areas of work:
+
+1. **Sensor acquisition:** Use correct callback contexts, synchronized counter access, and elapsed-time-based velocity calculation.
+2. **Control interface:** Add independent command bounds checking and robust serial packet framing/parsing.
+3. **State construction:** Define a consistent state schema and ensure reset returns a fresh observation.
+4. **Learning pipeline:** Save and reuse preprocessing parameters, verify train/validation split settings, and measure validation performance.
+5. **Software structure:** Correct package metadata and make initialization/shutdown behavior explicit.
+
+> **Review scope:** This review is based on static inspection of the source files currently present in this branch. The code was not built or executed as part of this review, so runtime behavior and hardware-dependent symptoms have not been experimentally verified.
