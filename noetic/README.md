@@ -229,3 +229,59 @@ Planned areas of work:
 5. **Software structure:** Correct package metadata and make initialization/shutdown behavior explicit.
 
 > **Review scope:** This review is based on static inspection of the source files currently present in this branch. The code was not built or executed as part of this review, so runtime behavior and hardware-dependent symptoms have not been experimentally verified.
+
+
+## 10. Demonstrations
+
+The following recordings demonstrate the command interface between the laptop, STM32 board, and RC transmitter, followed by the vehicle sensor data visualization.
+
+### 10.1 Laptop-Driven RC Transmitter Control
+
+**Recording:** `01_laptop_to_rc_transmitter_control.mp4`
+
+The laptop generates steering and throttle commands and sends them to the STM32 board. The STM32 outputs corresponding analog signals through its DAC, which operate the RC transmitter. The transmitter then sends the control signals wirelessly to the RC car.
+
+```text
+Laptop command values
+        │
+        ▼
+   STM32 (DAC)
+        │
+        ▼
+   RC transmitter
+        │ Wireless control
+        ▼
+      RC car
+```
+
+### 10.2 Manual Input and Laptop-Control Mode Switching
+
+**Recording:** `02_manual_input_and_control_mode_switching.mp4`
+
+The STM32 reads the steering and throttle signals from the RC transmitter through its ADC. Operating a separate switch changes the control mode: the system can use the transmitter input or switch to laptop-generated commands, which are output through the STM32 DAC to the transmitter.
+
+This recording demonstrates the input-reading path and the changeover between manual and laptop-driven control.
+
+```text
+RC transmitter ── analog input ──▶ STM32 (ADC)
+                                      │
+                               Mode selection
+                                      │
+Laptop command ───────────────────────┤
+                                      ▼
+                                STM32 (DAC)
+                                      │
+                                      ▼
+                               RC transmitter
+                                      │
+                                      ▼
+                                    RC car
+```
+
+### 10.3 ROS Vehicle Sensor Data Visualization
+
+**Recording:** `03_ros_vehicle_sensor_visualization.mp4`
+
+This recording shows examples of the vehicle data acquired by the sensing system and visualized through the ROS-based software. It provides a visual reference for the types of sensor measurements used by the project.
+
+> **Media note:** The recording names above are descriptive titles for the demonstrations. The original date-based filenames are retained in the source archive; the corresponding media files should be placed in the `noetic/media/` directory when uploaded.
