@@ -231,13 +231,16 @@ Planned areas of work:
 > **Review scope:** This review is based on static inspection of the source files currently present in this branch. The code was not built or executed as part of this review, so runtime behavior and hardware-dependent symptoms have not been experimentally verified.
 
 
+
 ## 10. Demonstrations
 
-The following recordings demonstrate the command interface between the laptop, STM32 board, and RC transmitter, followed by the vehicle sensor data visualization.
+These recordings show the RC transmitter interface, control-mode switching, and ROS vehicle-sensor visualization. GIFs are included for quick previews; the original MP4 recordings are provided separately for full-resolution review.
 
 ### 10.1 Laptop-Driven RC Transmitter Control
 
-**Recording:** `01_laptop_to_rc_transmitter_control.mp4`
+![Laptop-driven RC transmitter control](media/01_laptop_to_rc_transmitter_control.gif)
+
+[View original MP4](original_videos/01_laptop_to_rc_transmitter_control.mp4)
 
 The laptop generates steering and throttle commands and sends them to the STM32 board. The STM32 outputs corresponding analog signals through its DAC, which operate the RC transmitter. The transmitter then sends the control signals wirelessly to the RC car.
 
@@ -256,7 +259,9 @@ Laptop command values
 
 ### 10.2 Manual Input and Laptop-Control Mode Switching
 
-**Recording:** `02_manual_input_and_control_mode_switching.mp4`
+![Manual input and laptop-control mode switching](media/02_manual_and_laptop_control_mode_switching.gif)
+
+[View original MP4](original_videos/02_manual_and_laptop_control_mode_switching.mp4)
 
 The STM32 reads the steering and throttle signals from the RC transmitter through its ADC. Operating a separate switch changes the control mode: the system can use the transmitter input or switch to laptop-generated commands, which are output through the STM32 DAC to the transmitter.
 
@@ -280,8 +285,10 @@ Laptop command ─────────────────────�
 
 ### 10.3 ROS Vehicle Sensor Data Visualization
 
-**Recording:** `03_ros_vehicle_sensor_visualization.mp4`
+![ROS vehicle sensor data visualization](media/03_ros_vehicle_sensor_data_visualization.gif)
+
+[View original MP4](original_videos/03_ros_vehicle_sensor_data_visualization.mp4)
 
 This recording shows examples of the vehicle data acquired by the sensing system and visualized through the ROS-based software. It provides a visual reference for the types of sensor measurements used by the project.
 
-> **Media note:** The recording names above are descriptive titles for the demonstrations. The original date-based filenames are retained in the source archive; the corresponding media files should be placed in the `noetic/media/` directory when uploaded.
+> **Media files:** Place the three GIF files in `noetic/media/` and the three original MP4 files in `noetic/original_videos/` using the filenames shown above.
