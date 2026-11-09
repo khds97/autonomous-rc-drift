@@ -1,7 +1,0 @@
-06:30:02 **** Incremental Build of configuration Debug for project controller ****
-make -j20 all 
-USB_DEVICE/Target/usbd_conf.d:1: *** multiple target patterns.  Stop.
-"make -j20 all" terminated with exit code 2. Build might be incomplete.
-
-06:30:02 Build Failed. 1 errors, 0 warnings. (took 466ms)
-
