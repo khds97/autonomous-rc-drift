@@ -1,0 +1,228 @@
+2026-10-16 14:56:40,740 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:19:12,507 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,2,28,539x347,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:20:48,636 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:20:48,674 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:20:48,758 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:20:48,794 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:20:48,845 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,846 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,846 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,847 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,847 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,847 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,917 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,917 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,917 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,917 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,921 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,921 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,921 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,921 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,934 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,935 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,935 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,983 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,983 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,985 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,985 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,994 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,994 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:48,994 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:49,033 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:49,033 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:49,035 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:49,035 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:49,047 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:20:49,068 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:20:54,769 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:20:54,798 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:20:54,854 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:20:54,879 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:20:54,925 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,925 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,925 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,926 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,927 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,927 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,968 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,968 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,968 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,968 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,972 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,972 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,972 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,972 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,982 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,982 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:54,982 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,014 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,014 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,016 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,016 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,021 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,021 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,022 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,051 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,052 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,053 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,053 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:55,063 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:20:55,084 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:20:59,537 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:20:59,554 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:20:59,585 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:20:59,602 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:20:59,631 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,631 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,631 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,632 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,632 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,632 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,664 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,664 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,664 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,664 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,665 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,666 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,666 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,666 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,672 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,672 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,672 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,700 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,700 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,701 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,701 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,706 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,706 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,706 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,734 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,734 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,735 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,735 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:20:59,745 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:20:59,762 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:21:12,198 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:21:12,240 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:21:12,285 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:21:12,315 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:21:12,366 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:21:12,384 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:21:12,417 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,417 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,417 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,419 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,419 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,419 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,452 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,452 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,452 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,452 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,453 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,453 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,454 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,454 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,462 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,462 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,462 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,491 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,491 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,492 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,492 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,497 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,497 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,497 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,524 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,524 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,525 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,525 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:21:12,536 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2026-10-16 15:21:12,552 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,0,0,0x0,invalid,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2026-10-16 15:22:15,236 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 892947648 Bytes (1073741824)
+2026-10-16 15:22:17,314 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 919855816 Bytes (1073741824)
+2026-10-16 15:22:22,674 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 771546288 Bytes (1073741824)
+2026-10-16 15:22:23,321 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: USB_OTG_FS
+2026-10-16 15:22:23,322 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: NVIC
+2026-10-16 15:22:23,322 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: DMA
+2026-10-16 15:22:23,322 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: USB_DEVICE
+2026-10-16 15:22:23,322 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: SYS
+2026-10-16 15:22:23,322 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: GPIO
+2026-10-16 15:22:23,322 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: ADC
+2026-10-16 15:22:23,322 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: RCC
+2026-10-16 15:22:23,322 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: I2C
+2026-10-16 15:22:23,322 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: I2C
+2026-10-16 15:22:23,324 [INFO] CodeGenerator:793 - code generatio: config db path: C:\ST\STM32CubeIDE_1.12.1\STM32CubeIDE\plugins\com.st.stm32cube.common.mx_6.8.1.202304191431\\db\
+2026-10-16 15:22:23,334 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:22:23,334 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:22:23,335 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2026-10-16 15:22:23,335 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2026-10-16 15:22:23,340 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:22:23,340 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:22:23,340 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2026-10-16 15:22:23,512 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\license.tmp_save
+2026-10-16 15:22:24,039 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\license.tmp
+2026-10-16 15:22:24,170 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\gpio.c_save
+2026-10-16 15:22:24,343 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\gpio.c
+2026-10-16 15:22:24,371 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\gpio.h_save
+2026-10-16 15:22:24,478 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\gpio.h
+2026-10-16 15:22:24,559 [WARN] IPConfigManager:2937 - Warning: the RefConfig PWREx_EnableUSBVoltageDetector is not available in your config.xml file
+2026-10-16 15:22:24,584 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_vars.tmp_save
+2026-10-16 15:22:24,659 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_vars.tmp
+2026-10-16 15:22:24,671 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_inc.tmp_save
+2026-10-16 15:22:24,732 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_inc.tmp
+2026-10-16 15:22:24,754 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_HalInit.tmp_save
+2026-10-16 15:22:24,840 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_HalInit.tmp
+2026-10-16 15:22:24,855 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_Msp.tmp_save
+2026-10-16 15:22:24,940 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_Msp.tmp
+2026-10-16 15:22:25,259 [INFO] Middleware:1439 - No code input for Bsp Dependency
+2026-10-16 15:22:25,296 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\adc.c_save
+2026-10-16 15:22:25,433 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\adc.c
+2026-10-16 15:22:25,461 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\adc.h_save
+2026-10-16 15:22:25,544 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\adc.h
+2026-10-16 15:22:25,577 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\dma.c_save
+2026-10-16 15:22:25,658 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\dma.c
+2026-10-16 15:22:25,678 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\dma.h_save
+2026-10-16 15:22:25,743 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\dma.h
+2026-10-16 15:22:25,759 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\i2c.c_save
+2026-10-16 15:22:25,855 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\i2c.c
+2026-10-16 15:22:25,861 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\i2c.h_save
+2026-10-16 15:22:25,925 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\i2c.h
+2026-10-16 15:22:25,943 [INFO] Middleware:1439 - No code input for Bsp Dependency
+2026-10-16 15:22:25,966 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usb_device.c_save
+2026-10-16 15:22:26,041 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usb_device.c
+2026-10-16 15:22:26,061 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usb_device.h_save
+2026-10-16 15:22:26,127 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usb_device.h
+2026-10-16 15:22:26,147 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\Target\usbd_conf.h_save
+2026-10-16 15:22:26,213 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\Target\usbd_conf.h
+2026-10-16 15:22:26,232 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\Target\usbd_conf.c_save
+2026-10-16 15:22:26,305 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\Target\usbd_conf.c
+2026-10-16 15:22:26,328 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_desc.h_save
+2026-10-16 15:22:26,395 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_desc.h
+2026-10-16 15:22:26,413 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_desc.c_save
+2026-10-16 15:22:26,483 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_desc.c
+2026-10-16 15:22:26,506 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_cdc_if.h_save
+2026-10-16 15:22:26,570 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_cdc_if.h
+2026-10-16 15:22:26,588 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_cdc_if.c_save
+2026-10-16 15:22:26,665 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_cdc_if.c
+2026-10-16 15:22:26,694 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\stm32f4xx_it.c_save
+2026-10-16 15:22:26,801 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\stm32f4xx_it.c
+2026-10-16 15:22:26,818 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\stm32f4xx_it.h_save
+2026-10-16 15:22:26,885 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\stm32f4xx_it.h
+2026-10-16 15:22:26,914 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\stm32f4xx_hal_msp.c_save
+2026-10-16 15:22:26,995 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\stm32f4xx_hal_msp.c
+2026-10-16 15:22:27,008 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\system.tmp_save
+2026-10-16 15:22:27,080 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\system.tmp
+2026-10-16 15:22:27,111 [INFO] CodeEngine:311 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\stm32f4xx_hal_conf.h_save
+2026-10-16 15:22:27,206 [INFO] CodeEngine:335 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\stm32f4xx_hal_conf.h
+2026-10-16 15:22:27,298 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\main.h_save
+2026-10-16 15:22:27,410 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\main.h
+2026-10-16 15:22:27,438 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\main.c_save
+2026-10-16 15:22:27,556 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\main.c
+2026-10-16 15:22:28,378 [INFO] ProjectBuilder:2996 - Time for Copy HAL[1] : 445mS.
+2026-10-16 15:22:28,392 [INFO] ProjectBuilder:4304 - Project Generator version: 3.19.2
+2026-10-16 15:22:28,618 [INFO] ConfigFileManager:1483 - The Die is : DIE423
+2026-10-16 15:22:28,634 [INFO] ApiDbMcu:507 - Load IP Config File for FATFS
+2026-10-16 15:22:28,649 [INFO] ApiDbMcu:507 - Load IP Config File for FREERTOS
+2026-10-16 15:22:28,661 [INFO] ApiDbMcu:507 - Load IP Config File for LIBJPEG
+2026-10-16 15:22:28,678 [INFO] ApiDbMcu:507 - Load IP Config File for MBEDTLS
+2026-10-16 15:22:28,692 [INFO] ApiDbMcu:507 - Load IP Config File for USB_HOST

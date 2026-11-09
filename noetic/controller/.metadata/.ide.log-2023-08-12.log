@@ -1,0 +1,90 @@
+2023-08-13 08:49:06,216 [INFO] Gpio:273 - dependency for GPIO [ADC1, I2C1, I2C3, RCC, SYS, USB_OTG_FS]
+2023-08-13 08:49:11,051 [INFO] NvicIntPanel:101 - NVIC parent = com.st.microxplorer.plugins.ip.nvic.MultiNvicIntPanel[,2,28,310x562,layout=javax.swing.BoxLayout,alignmentX=0.0,alignmentY=0.0,border=,flags=9,maximumSize=,minimumSize=,preferredSize=]
+2023-08-13 08:50:43,415 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 653292768 Bytes (912261120)
+2023-08-13 08:50:45,808 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 537402968 Bytes (912261120)
+2023-08-13 08:50:48,012 [INFO] UtilMem:75 - End SaveConfig() Used Memory: 585448320 Bytes (912261120)
+2023-08-13 08:50:49,443 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: USB_OTG_FS
+2023-08-13 08:50:49,443 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: NVIC
+2023-08-13 08:50:49,443 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: DMA
+2023-08-13 08:50:49,443 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: USB_DEVICE
+2023-08-13 08:50:49,449 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: SYS
+2023-08-13 08:50:49,449 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: GPIO
+2023-08-13 08:50:49,449 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: ADC
+2023-08-13 08:50:49,449 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: RCC
+2023-08-13 08:50:49,449 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: I2C
+2023-08-13 08:50:49,449 [INFO] BlockDiagram:2759 - set Specific Code input for plugin: I2C
+2023-08-13 08:50:49,449 [INFO] CodeGenerator:793 - code generatio: config db path: C:\ST\STM32CubeIDE_1.12.1\STM32CubeIDE\plugins\com.st.stm32cube.common.mx_6.8.1.202304191431\\db\
+2023-08-13 08:50:49,511 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2023-08-13 08:50:49,511 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2023-08-13 08:50:49,511 [WARN] IP:2113 - I2C_Coeff_DF not found: check if there is a RefParameter without a condition.
+2023-08-13 08:50:49,511 [WARN] IP:2113 - Analog_Filter not found: check if there is a RefParameter without a condition.
+2023-08-13 08:50:49,527 [WARN] IP:2113 - DEVICE_SERIAL0_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-08-13 08:50:49,527 [WARN] IP:2113 - DEVICE_SERIAL1_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-08-13 08:50:49,527 [WARN] IP:2113 - DEVICE_SERIAL2_CDC_FS not found: check if there is a RefParameter without a condition.
+2023-08-13 08:50:50,736 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\license.tmp_save
+2023-08-13 08:50:52,086 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\license.tmp
+2023-08-13 08:50:52,370 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\gpio.c_save
+2023-08-13 08:50:52,778 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\gpio.c
+2023-08-13 08:50:52,809 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\gpio.h_save
+2023-08-13 08:50:53,092 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\gpio.h
+2023-08-13 08:50:53,280 [WARN] IPConfigManager:2937 - Warning: the RefConfig PWREx_EnableUSBVoltageDetector is not available in your config.xml file
+2023-08-13 08:50:53,327 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_vars.tmp_save
+2023-08-13 08:50:53,501 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_vars.tmp
+2023-08-13 08:50:53,501 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_inc.tmp_save
+2023-08-13 08:50:53,657 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_inc.tmp
+2023-08-13 08:50:53,736 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_HalInit.tmp_save
+2023-08-13 08:50:54,053 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_HalInit.tmp
+2023-08-13 08:50:54,066 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_Msp.tmp_save
+2023-08-13 08:50:54,317 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\usb_otg_fs_Msp.tmp
+2023-08-13 08:50:54,962 [INFO] Middleware:1439 - No code input for Bsp Dependency
+2023-08-13 08:50:55,025 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\adc.c_save
+2023-08-13 08:50:55,277 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\adc.c
+2023-08-13 08:50:55,308 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\adc.h_save
+2023-08-13 08:50:55,433 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\adc.h
+2023-08-13 08:50:55,511 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\dma.c_save
+2023-08-13 08:50:55,669 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\dma.c
+2023-08-13 08:50:55,685 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\dma.h_save
+2023-08-13 08:50:55,857 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\dma.h
+2023-08-13 08:50:55,904 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\i2c.c_save
+2023-08-13 08:50:56,062 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\i2c.c
+2023-08-13 08:50:56,062 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\i2c.h_save
+2023-08-13 08:50:56,204 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\i2c.h
+2023-08-13 08:50:56,219 [INFO] Middleware:1439 - No code input for Bsp Dependency
+2023-08-13 08:50:56,258 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usb_device.c_save
+2023-08-13 08:50:56,549 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usb_device.c
+2023-08-13 08:50:56,581 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usb_device.h_save
+2023-08-13 08:50:56,801 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usb_device.h
+2023-08-13 08:50:56,832 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\Target\usbd_conf.h_save
+2023-08-13 08:50:56,989 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\Target\usbd_conf.h
+2023-08-13 08:50:57,021 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\Target\usbd_conf.c_save
+2023-08-13 08:50:57,163 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\Target\usbd_conf.c
+2023-08-13 08:50:57,194 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_desc.h_save
+2023-08-13 08:50:57,273 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_desc.h
+2023-08-13 08:50:57,289 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_desc.c_save
+2023-08-13 08:50:57,367 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_desc.c
+2023-08-13 08:50:57,383 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_cdc_if.h_save
+2023-08-13 08:50:57,445 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_cdc_if.h
+2023-08-13 08:50:57,461 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_cdc_if.c_save
+2023-08-13 08:50:57,540 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\USB_DEVICE\App\usbd_cdc_if.c
+2023-08-13 08:50:57,559 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\stm32f4xx_it.c_save
+2023-08-13 08:50:57,681 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\stm32f4xx_it.c
+2023-08-13 08:50:57,700 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\stm32f4xx_it.h_save
+2023-08-13 08:50:57,807 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\stm32f4xx_it.h
+2023-08-13 08:50:57,851 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\stm32f4xx_hal_msp.c_save
+2023-08-13 08:50:57,980 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\stm32f4xx_hal_msp.c
+2023-08-13 08:50:57,996 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\MXTmpFiles\system.tmp_save
+2023-08-13 08:50:58,060 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\MXTmpFiles\system.tmp
+2023-08-13 08:50:58,090 [INFO] CodeEngine:311 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\stm32f4xx_hal_conf.h_save
+2023-08-13 08:50:58,168 [INFO] CodeEngine:335 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\stm32f4xx_hal_conf.h
+2023-08-13 08:50:58,278 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Inc\main.h_save
+2023-08-13 08:50:58,515 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Inc\main.h
+2023-08-13 08:50:58,563 [INFO] CodeEngine:255 - oldGeneratedFile, C:\TrueStudio_ws\controller\controller\Core\Src\main.c_save
+2023-08-13 08:50:58,767 [INFO] CodeEngine:279 - Generated code: C:\TrueStudio_ws\controller\controller\Core\Src\main.c
+2023-08-13 08:51:00,041 [INFO] ProjectBuilder:2996 - Time for Copy HAL[1] : 252mS.
+2023-08-13 08:51:00,043 [INFO] ProjectBuilder:4304 - Project Generator version: 3.19.2
+2023-08-13 08:51:00,624 [INFO] ConfigFileManager:1483 - The Die is : DIE423
+2023-08-13 08:51:00,665 [INFO] ApiDbMcu:507 - Load IP Config File for FATFS
+2023-08-13 08:51:00,687 [INFO] ApiDbMcu:507 - Load IP Config File for FREERTOS
+2023-08-13 08:51:00,702 [INFO] ApiDbMcu:507 - Load IP Config File for LIBJPEG
+2023-08-13 08:51:00,844 [INFO] ApiDbMcu:507 - Load IP Config File for MBEDTLS
+2023-08-13 08:51:00,875 [INFO] ApiDbMcu:507 - Load IP Config File for USB_HOST
