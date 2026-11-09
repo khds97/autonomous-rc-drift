@@ -66,7 +66,7 @@ The overall design separates on-vehicle sensing from higher-level processing and
 | RC car | Steering and motor actuation; vehicle-mounted sensors | Vehicle hardware and embedded controller |
 | Raspberry Pi 4 | Read wheel/tire signals and current; publish sensor data; run camera driver | `RPi4/driftmodel` |
 | Laptop | Camera/IMU processing, odometry, state construction, control and learning | `laptop/driftmodel` |
-| STM32 | Receive steering/throttle commands over USB serial and interface with vehicle electronics | Accessed by laptop through `USBReceiver` |
+| STM32 controller | Receive laptop commands over USB CDC, read transmitter inputs through ADC, and output steering/throttle voltages through external DACs | `controller/controller/Core/Src/main.c`, `controller/controller/USB_DEVICE/App/usbd_cdc_if.c` |
 | Custom ROS messages | Define the vehicle sensor data exchanged between nodes | `RPi4/driftmodel_msg`, `laptop/driftmodel_msg` |
 
 ## 4. Raspberry Pi 4 — On-Vehicle Sensing
@@ -123,48 +123,119 @@ The detailed state representation, neural-network architecture, DAgger workflow,
 
 ## 6. Laptop-to-Vehicle Command Interface
 
-The laptop communicates with the STM32 controller through a USB serial connection.
+The laptop communicates with the STM32 controller through a USB virtual COM port using the USB CDC interface.
 
-The current `USBReceiver` implementation:
+The laptop sends steering and throttle values as newline-separated text. The STM32 receives the values in `CDC_Receive_FS()` and stores them in the `steer` and `throttle` variables.
 
-- Opens the serial device `/dev/ACMSTM32`.
-- Uses a baud rate of 115200.
-- Sends steering and throttle values as newline-separated text.
-- Receives steering, throttle, mode, and punishment feedback from the serial stream.
-
-This creates the command path:
+The command path is:
 
 ```text
 Laptop control process
-        │
-        ▼
-USBReceiver
-        │ USB serial
-        ▼
-STM32 controller
-        │
-        ▼
-RC car steering / motor control
+        |
+        | USB CDC (virtual COM port)
+        | steering / throttle values
+        v
+STM32F401CCU6
+        |
+        | I2C
+        v
+MCP4725 DACs
+        |
+        | analog steering / throttle signals
+        v
+RC transmitter
+        |
+        | wireless control
+        v
+RC car
 ```
 
-The STM32 is therefore the low-level interface between the laptop's ROS control software and the vehicle electronics.
+The STM32 also reads the transmitter's analog steering and throttle signals through its ADC. A hardware switch selects between the transmitter input and the laptop command path. In laptop-control mode, the two MCP4725 devices generate the corresponding analog outputs.
 
-## 7. Repository Structure
+The firmware sends feedback values back to the laptop over USB CDC. The transmitted line contains the selected input values and control-mode flags, separated by tab characters.
+
+## 7. STM32 Controller — Firmware and Peripherals
+
+The controller project is located at:
+
+`controller/`
+
+It was configured in STM32CubeIDE for the **STM32F401CCU6** microcontroller. The project includes the CubeMX configuration file, application code, STM32 HAL drivers, USB device middleware, and the MCP4725 driver.
+
+### Main functions
+
+| Function | Implementation | Description |
+|---|---|---|
+| USB communication | USB CDC, `USB_DEVICE/App/usbd_cdc_if.c` | Receives steering and throttle values from the laptop and sends feedback values back. |
+| ADC input | ADC1 with DMA, `Core/Src/adc.c` | Reads two analog channels from the RC transmitter. The configured inputs are ADC1_IN8 (PB0) and ADC1_IN9 (PB1), using 12-bit conversion. |
+| DAC output | MCP4725, `Lib/Src/MCP4725.c` | Converts the laptop's steering and throttle commands into analog voltage outputs. Two DAC instances are used. |
+| I2C communication | I2C1 and I2C3, `Core/Src/i2c.c` | Provides separate I2C connections for the two MCP4725 DACs. Both interfaces are configured for 400 kHz operation. |
+| Mode selection | GPIO and external interrupts, `Core/Src/main.c` and `Core/Src/gpio.c` | Reads switch inputs and controls the signal-selection lines. |
+
+### Firmware flow
+
+1. The firmware initializes GPIO, DMA, ADC, I2C, and the USB CDC device.
+2. ADC1 continuously samples the two transmitter input channels through DMA.
+3. USB CDC receives steering and throttle commands from the laptop.
+4. The mode-selection logic chooses whether to use the transmitter input or the laptop command path.
+5. In laptop-control mode, the STM32 writes the steering and throttle values to the two MCP4725 DACs.
+6. The selected values and mode flags are sent back to the laptop as feedback.
+
+The main application flow is implemented in `controller/controller/Core/Src/main.c`. USB command reception is handled in `controller/controller/USB_DEVICE/App/usbd_cdc_if.c`, while the MCP4725 interface is implemented in `controller/controller/Lib/`.
+
+### Project files
+
+```text
+controller/
+├── controller.ioc                 # STM32CubeMX configuration
+└── controller/
+    ├── Core/
+    │   ├── Inc/                    # Peripheral and application headers
+    │   └── Src/                    # Main application and peripheral setup
+    ├── Drivers/
+    │   ├── CMSIS/
+    │   └── STM32F4xx_HAL_Driver/
+    ├── Lib/
+    │   ├── Inc/                    # MCP4725 interface
+    │   └── Src/                    # MCP4725 implementation
+    ├── Middlewares/
+    │   └── ST/STM32_USB_Device_Library/
+    ├── USB_DEVICE/
+    │   ├── App/                    # USB CDC application interface
+    │   └── Target/                 # USB device configuration
+    ├── Debug/                      # Generated build output
+    └── controller.ioc              # STM32CubeMX project configuration
+```
+
+The firmware source and project configuration are included in the repository. The project has not been rebuilt as part of this README update, so the documented peripheral configuration is based on the checked-in source and CubeMX files.
+
+## 8. Repository Structure
 
 ```text
 noetic/
 ├── README.md
+├── controller/
+│   ├── controller.ioc
+│   └── controller/
+│       ├── Core/                   # STM32 application and peripheral code
+│       ├── Drivers/                # CMSIS and STM32 HAL
+│       ├── Lib/                    # MCP4725 DAC driver
+│       ├── Middlewares/            # USB device middleware
+│       └── USB_DEVICE/              # USB CDC interface
 ├── RPi4/
 │   ├── driftmodel/
-│   │   ├── include/       # Sensor and hardware interface headers
-│   │   ├── launch/        # Raspberry Pi launch configuration
-│   │   └── src/           # GPIO, ADC, wheel-speed and ROS publisher code
-│   └── driftmodel_msg/    # Vehicle sensor message definition
+│   │   ├── include/                # Sensor and hardware interface headers
+│   │   ├── launch/                 # Raspberry Pi launch configuration
+│   │   └── src/                    # GPIO, ADC, wheel-speed and ROS publisher code
+│   └── driftmodel_msg/             # Vehicle sensor message definition
 └── laptop/
     ├── driftmodel/
-    │   ├── launch/        # Camera, odometry and visualization launch setup
-    │   └── src/           # Environment, USB interface, model and DAgger code
-    └── driftmodel_msg/    # Matching ROS message package
+    │   ├── launch/                 # Camera, odometry and visualization launch setup
+    │   └── src/                    # Environment, USB interface, model and DAgger code
+    └── driftmodel_msg/             # Matching ROS message package
+
+media/                              # Demonstration GIFs
+original_videos/                    # Original MP4 recordings
 ```
 
 ## 8. Development History and Scope
