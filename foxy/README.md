@@ -10,6 +10,7 @@ The Noetic implementation is on the `noetic` branch.
 
 ```
 foxy/
+├── controller/             STM32F401CCU6 firmware (USB CDC, ADC, I2C, MCP4725 DAC)
 ├── RPi4/
 │   ├── driftmodel_msg/     msg/Sensors.msg
 │   └── driftmodel/         sensor node (C++, pigpio, ADS1115), launch/
@@ -18,6 +19,10 @@ foxy/
     └── driftmodel/         preprocess, model, usb_receiver, driftmodel_env,
                             train_agent, dagger, pose_flag, sync_sub; launch/, demo.rviz
 ```
+
+The `controller/` directory contains the STM32F401CCU6 firmware used for the RC transmitter interface. This is the controller firmware carried over from the Noetic setup; the ROS 2 port mainly changes the Raspberry Pi and laptop software. The controller communicates with the laptop through USB CDC, reads the transmitter's steering and throttle signals through ADC, and uses two MCP4725 DACs to output analog steering and throttle signals. GPIO inputs select between manual transmitter control and laptop commands.
+
+The STM32 project includes its CubeMX configuration, application source, HAL/CMSIS drivers, USB CDC middleware, and the MCP4725 driver. IDE workspace metadata and compiled Debug output are excluded.
 
 Differences from the Noetic layout:
 
