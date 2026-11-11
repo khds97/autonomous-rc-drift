@@ -38,6 +38,10 @@ ros2 topic list | grep '^/camera/'
 ros2 topic echo /camera/fixed/image_raw --once
 ```
 
+## Demo recording
+
+The original recording is available as [dual_camera_demo.mp4](media/dual_camera_demo.mp4). A compressed GIF preview is prepared separately; it will be added to this directory once the binary upload is complete.
+
 ## Current limitations
 
 - The message timestamp is assigned when the frame is published (`this->now()`), not when the camera captured it.
@@ -45,7 +49,3 @@ ros2 topic echo /camera/fixed/image_raw --once
 - `camera_info` calibration messages are not published.
 - This package does not publish IMU data. IMU acquisition is outside the scope of this camera publisher.
 - The rotating camera's actual servo angle is not measured. Sharing a PWM command with the steering servo does not by itself provide a calibrated camera-angle measurement.
-
-## Demo recording
-
-The full-resolution demo GIF is kept with the local package archive for now and has not yet been added to this GitHub branch.
