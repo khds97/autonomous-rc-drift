@@ -13,7 +13,8 @@ foxy/
 ├── controller/             STM32F401CCU6 firmware (USB CDC, ADC, I2C, MCP4725 DAC)
 ├── RPi4/
 │   ├── driftmodel_msg/     msg/Sensors.msg
-│   └── driftmodel/         sensor node (C++, pigpio, ADS1115), launch/
+│   ├── driftmodel/         sensor node (C++, pigpio, ADS1115), launch/
+│   └── camera_publisher/   dual USB camera publisher (V4L2, OpenCV), launch/
 └── laptop/
     ├── driftmodel_msg/     msg/{Sensors,CtrlVal,PoseFlag}.msg, srv/Flag.srv
     └── driftmodel/         preprocess, model, usb_receiver, driftmodel_env,
@@ -29,7 +30,9 @@ Differences from the Noetic layout:
 - `msg/` and `srv/` are at the package root and the names are CamelCase (required by ROS 2).
 - The laptop-side USB module is Python (`usb_receiver.py`) instead of C++, so there is no `include/` on the laptop.
 - Launch files are Python (`launch/*.py`). `demo.rviz` is a minimal rviz2 config (grid and odometry).
-- The VINS / camera launch files, the recorded data and the trained models were not carried over.
+- A separate `camera_publisher` package is included under `RPi4/` for the fixed and steering-linked rotating cameras. It publishes two grayscale image topics.
+- OpenVINS/VINS integration is not currently included. The camera package does not publish IMU or camera calibration data, and the two camera streams are not hardware-synchronized.
+- The recorded data and trained models were not carried over.
 
 ## Device-specific setup
 
