@@ -31,26 +31,123 @@ Differences from the Noetic layout:
 - Launch files are Python (`launch/*.py`). `demo.rviz` is a minimal rviz2 config (grid and odometry).
 - The VINS / camera launch files, the recorded data and the trained models were not carried over.
 
-## Build and run
+## Device-specific setup
 
-Ubuntu 20.04, ROS 2 Foxy, Python 3.8.
+This repository contains the laptop and Raspberry Pi packages in one Git repository. You do not need to clone the entire Foxy source tree on each device: use Git sparse checkout to populate only the directory needed on that device.
+
+The commands below assume Ubuntu 20.04, ROS 2 Foxy, Python 3.8, and a fresh checkout. Run the laptop commands on the laptop and the Raspberry Pi commands on the Raspberry Pi.
+
+### Laptop
+
+Clone only the laptop-side ROS 2 packages:
 
 ```bash
-# Raspberry Pi 4
-sudo pigpiod
-cd ~/foxy_ws/src && ln -s <repo>/foxy/RPi4/* .
-cd ~/foxy_ws && colcon build && source install/setup.bash
-ros2 launch driftmodel driftmodel.launch.py
+cd ~
 
-# Laptop
-pip3 install torch scikit-learn joblib pynput pyserial numpy
-cd ~/foxy_ws/src && ln -s <repo>/foxy/laptop/* .
-cd ~/foxy_ws && colcon build && source install/setup.bash
-ros2 launch driftmodel driftmodel.launch.py serial_port:=/dev/ACMSTM32 use_rviz:=true
+git clone --filter=blob:none --no-checkout -b foxy \
+  https://github.com/khds97/autonomous-rc-drift.git
+
+cd ~/autonomous-rc-drift
+git sparse-checkout init --cone
+git sparse-checkout set foxy/laptop
+git checkout foxy
 ```
 
+Create the ROS 2 workspace and link the two packages:
+
+```bash
+mkdir -p ~/foxy_ws/src
+
+ln -s ~/autonomous-rc-drift/foxy/laptop/driftmodel_msg \
+  ~/foxy_ws/src/driftmodel_msg
+ln -s ~/autonomous-rc-drift/foxy/laptop/driftmodel \
+  ~/foxy_ws/src/driftmodel
+```
+
+Install the Python dependencies and build:
+
+```bash
+pip3 install torch scikit-learn joblib pynput pyserial numpy
+
+cd ~/foxy_ws
+colcon build
+source install/setup.bash
+```
+
+Launch the laptop node:
+
+```bash
+ros2 launch driftmodel driftmodel.launch.py \
+  serial_port:=/dev/ACMSTM32 use_rviz:=true
+```
+
+### Raspberry Pi 4
+
+Clone only the Raspberry Pi-side ROS 2 packages:
+
+```bash
+cd ~
+
+git clone --filter=blob:none --no-checkout -b foxy \
+  https://github.com/khds97/autonomous-rc-drift.git
+
+cd ~/autonomous-rc-drift
+git sparse-checkout init --cone
+git sparse-checkout set foxy/RPi4
+git checkout foxy
+```
+
+Create the ROS 2 workspace and link the two packages:
+
+```bash
+mkdir -p ~/foxy_ws/src
+
+ln -s ~/autonomous-rc-drift/foxy/RPi4/driftmodel_msg \
+  ~/foxy_ws/src/driftmodel_msg
+ln -s ~/autonomous-rc-drift/foxy/RPi4/driftmodel \
+  ~/foxy_ws/src/driftmodel
+```
+
+Build the packages:
+
+```bash
+cd ~/foxy_ws
+colcon build
+source install/setup.bash
+```
+
+Start the pigpio daemon and launch the sensor node:
+
+```bash
+sudo pigpiod
+ros2 launch driftmodel driftmodel.launch.py
+```
+
+### Updating an existing sparse checkout
+
+After new commits are pushed to the `foxy` branch, update the checkout on the relevant device:
+
+```bash
+cd ~/autonomous-rc-drift
+git pull origin foxy
+
+cd ~/foxy_ws
+colcon build
+source install/setup.bash
+```
+
+The sparse-checkout selection is retained, so the laptop continues to populate `foxy/laptop` and the Raspberry Pi continues to populate `foxy/RPi4`.
+
+### STM32 controller
+
+The `foxy/controller/` directory contains STM32CubeIDE firmware, not a ROS 2 package. It is kept in the same repository for version control, but it is not added to the ROS 2 workspace with `colcon`. Open the STM32 project in STM32CubeIDE and build/flash it separately.
+
+## Running the learning code
+
 DAgger is started by the `pose_flag` node (it runs `dagger.py`) or directly with `ros2 run driftmodel dagger.py`.
+
 Offline training: `ros2 run driftmodel train_agent.py <model_path> --data_dir <dir>`.
+
 Data and models go to `~/driftmodel/data` and `~/driftmodel/dagger_models` by default.
 
 Sensor node parameters: `publish_rate_hz` (34), `speed_window_s` (0.1), `motor_counts_per_rev` (6), `magnets_per_wheel` (8), `rpm_timeout_s` (0.5).
