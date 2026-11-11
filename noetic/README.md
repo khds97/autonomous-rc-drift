@@ -363,3 +363,118 @@ Laptop command ─────────────────────�
 This recording shows examples of the vehicle data acquired by the sensing system and visualized through the ROS-based software. It provides a visual reference for the types of sensor measurements used by the project.
 
 > **Media files:** Place the three GIF files in `noetic/media/` and the three original MP4 files in `noetic/original_videos/` using the filenames shown above.
+
+
+## 11. Device-specific setup
+
+The Noetic branch keeps the Raspberry Pi and laptop packages in one Git repository. Each device can use Git sparse checkout to populate only its own ROS packages. The commands below assume Ubuntu 20.04 and ROS Noetic are already installed, and are intended for a fresh checkout. Run the laptop commands on the laptop and the Raspberry Pi commands on the Raspberry Pi.
+
+### Laptop
+
+Clone only the laptop-side packages:
+
+```bash
+cd ~
+
+git clone --filter=blob:none --no-checkout -b noetic \
+  https://github.com/khds97/autonomous-rc-drift.git
+
+cd ~/autonomous-rc-drift
+git sparse-checkout init --cone
+git sparse-checkout set noetic/laptop
+git checkout noetic
+```
+
+Create a catkin workspace and link the two laptop packages:
+
+```bash
+mkdir -p ~/noetic_ws/src
+
+ln -s ~/autonomous-rc-drift/noetic/laptop/driftmodel_msg \
+  ~/noetic_ws/src/driftmodel_msg
+ln -s ~/autonomous-rc-drift/noetic/laptop/driftmodel \
+  ~/noetic_ws/src/driftmodel
+```
+
+Install package dependencies and build:
+
+```bash
+cd ~/noetic_ws
+rosdep install --from-paths src --ignore-src -r -y
+catkin_make
+source devel/setup.bash
+```
+
+Launch the laptop-side nodes:
+
+```bash
+roslaunch driftmodel driftmodel.launch
+```
+
+The laptop launch file also expects the external VINS-Fusion and Loop Fusion packages, the OAK-D camera topics, and the configuration path currently set in the launch file. Those dependencies and configuration files are not included in this sparse checkout and must be installed/configured separately.
+
+**Known build limitation:** the current `noetic/laptop/driftmodel/package.xml` contains an extra `>` at the end of an `exec_depend` tag. This malformed XML must be corrected before the laptop workspace can build successfully. This existing issue is also recorded in the legacy implementation review above.
+
+### Raspberry Pi 4
+
+Clone only the Raspberry Pi-side packages:
+
+```bash
+cd ~
+
+git clone --filter=blob:none --no-checkout -b noetic \
+  https://github.com/khds97/autonomous-rc-drift.git
+
+cd ~/autonomous-rc-drift
+git sparse-checkout init --cone
+git sparse-checkout set noetic/RPi4
+git checkout noetic
+```
+
+Create a catkin workspace and link the two Raspberry Pi packages:
+
+```bash
+mkdir -p ~/noetic_ws/src
+
+ln -s ~/autonomous-rc-drift/noetic/RPi4/driftmodel_msg \
+  ~/noetic_ws/src/driftmodel_msg
+ln -s ~/autonomous-rc-drift/noetic/RPi4/driftmodel \
+  ~/noetic_ws/src/driftmodel
+```
+
+Install package dependencies and build:
+
+```bash
+cd ~/noetic_ws
+rosdep install --from-paths src --ignore-src -r -y
+catkin_make
+source devel/setup.bash
+```
+
+Start the pigpio daemon and launch the Raspberry Pi sensor/camera nodes:
+
+```bash
+sudo pigpiod
+roslaunch driftmodel driftmodel.launch
+```
+
+The Raspberry Pi launch file includes the `depthai_examples` stereo-inertial launch file. Install the OAK-D/DepthAI ROS packages and configure the camera separately before expecting the complete launch to run.
+
+### Updating an existing sparse checkout
+
+After new commits are pushed to the `noetic` branch, update the checkout on the relevant device:
+
+```bash
+cd ~/autonomous-rc-drift
+git pull origin noetic
+
+cd ~/noetic_ws
+catkin_make
+source devel/setup.bash
+```
+
+The sparse-checkout selection is retained, so the laptop continues to populate `noetic/laptop` and the Raspberry Pi continues to populate `noetic/RPi4`.
+
+### STM32 controller
+
+The `noetic/controller/` directory contains STM32CubeIDE firmware, not a ROS package. It is kept in the same repository for version control, but it is not added to the catkin workspace. Open the project in STM32CubeIDE and build/flash it separately.
