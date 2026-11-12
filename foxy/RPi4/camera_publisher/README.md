@@ -13,6 +13,12 @@ The Y-cable splits the gyro-corrected PWM signal to the two servos. The publishe
 
 Two HBVCAM-W20282GS V11 camera boards (OV9281, monochrome global shutter) are mounted on top of the Raspberry Pi 4.
 
+### Gyro-linked camera test
+
+<img src="images/gyro_linked_camera_tracking_test.gif" alt="Rotating camera turning together with the front wheels">
+
+The steering is turned with the transmitter wheel (left side of the picture). The front wheels and the rotating camera turn together, because both servos get the same gyro-corrected steering signal.
+
 ## Published topics
 
 | Topic | Camera |
