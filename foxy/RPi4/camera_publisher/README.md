@@ -44,7 +44,7 @@ ros2 topic echo /camera/fixed/image_raw --once
 
 ## Demo
 
-<img src="images/dual_camera_demo.gif" alt="Both camera streams in rqt" width="400">
+<img src="images/dual_camera_demo.gif" alt="Both camera streams in rqt">
 
 The two streams (`/camera/rotating/image_raw` on the left, `/camera/fixed/image_raw` on the right) are viewed in `rqt` while `htop` runs next to it to show the CPU load of the publisher.
 
