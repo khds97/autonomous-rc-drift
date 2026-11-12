@@ -38,7 +38,7 @@ target_link_libraries(dual_camera_publisher
 install(TARGETS dual_camera_publisher
   DESTINATION lib/${PROJECT_NAME})
 
-install(DIRECTORY launch media
+install(DIRECTORY launch
   DESTINATION share/${PROJECT_NAME})
 
 ament_package()

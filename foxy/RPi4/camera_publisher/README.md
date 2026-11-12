@@ -9,6 +9,10 @@ This package publishes images from two USB cameras connected to the Raspberry Pi
 
 The Y-cable splits the gyro-corrected PWM signal to the two servos. The publisher itself only captures and publishes camera images; it does not command either servo or estimate the camera angle.
 
+![Camera rig on the car](images/camera_rig.jpg)
+
+Two HBVCAM-W20282GS V11 camera boards (OV9281, monochrome global shutter) are mounted on top of the Raspberry Pi 4.
+
 ## Published topics
 
 | Topic | Camera |
@@ -38,9 +42,11 @@ ros2 topic list | grep '^/camera/'
 ros2 topic echo /camera/fixed/image_raw --once
 ```
 
-## Demo recording
+## Demo
 
-The original recording is available as [dual_camera_demo.mp4](media/dual_camera_demo.mp4). A compressed GIF preview is prepared separately; it will be added to this directory once the binary upload is complete.
+![Both camera streams in rqt](images/dual_camera_demo.gif)
+
+The two streams (`/camera/rotating/image_raw` on the left, `/camera/fixed/image_raw` on the right) are viewed in `rqt` while `htop` runs next to it to show the CPU load of the publisher.
 
 ## Current limitations
 
