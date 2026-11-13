@@ -36,9 +36,9 @@ Differences from the Noetic layout:
 
 ## Device-specific setup
 
-This repository contains the laptop and Raspberry Pi packages in one Git repository. You do not need to clone the entire Foxy source tree on each device: use Git sparse checkout to populate only the directory needed on that device.
+This repository contains the laptop, Raspberry Pi, and STM32 controller files in one Git repository. Each device can use Git sparse checkout to populate only the directory it needs. The instructions below use a normal clone followed by sparse checkout; this avoids the partial-clone options and keeps the commands straightforward.
 
-The commands below assume Ubuntu 20.04, ROS 2 Foxy, Python 3.8, and a fresh checkout. Run the laptop commands on the laptop and the Raspberry Pi commands on the Raspberry Pi.
+The commands below assume Ubuntu 20.04, ROS 2 Foxy, Python 3.8, and a fresh checkout. Run the laptop commands on the laptop and the Raspberry Pi commands on the Raspberry Pi. The laptop and Raspberry Pi are separate machines, so each one should have its own clone.
 
 ### Laptop
 
@@ -46,14 +46,11 @@ Clone only the laptop-side ROS 2 packages:
 
 ```bash
 cd ~
-
-git clone --filter=blob:none --no-checkout -b foxy \
-  https://github.com/khds97/autonomous-rc-drift.git
+git clone -b foxy https://github.com/khds97/autonomous-rc-drift.git
 
 cd ~/autonomous-rc-drift
 git sparse-checkout init --cone
 git sparse-checkout set foxy/laptop
-git checkout foxy
 ```
 
 Create the ROS 2 workspace and link the two packages:
@@ -90,14 +87,11 @@ Clone only the Raspberry Pi-side ROS 2 packages:
 
 ```bash
 cd ~
-
-git clone --filter=blob:none --no-checkout -b foxy \
-  https://github.com/khds97/autonomous-rc-drift.git
+git clone -b foxy https://github.com/khds97/autonomous-rc-drift.git
 
 cd ~/autonomous-rc-drift
 git sparse-checkout init --cone
 git sparse-checkout set foxy/RPi4
-git checkout foxy
 ```
 
 Create the ROS 2 workspace and link the two packages:
@@ -128,7 +122,7 @@ ros2 launch driftmodel driftmodel.launch.py
 
 ### Updating an existing sparse checkout
 
-After new commits are pushed to the `foxy` branch, update the checkout on the relevant device:
+After new commits are pushed to the `foxy` branch, update the checkout on the relevant device. The sparse-checkout selection is retained:
 
 ```bash
 cd ~/autonomous-rc-drift
