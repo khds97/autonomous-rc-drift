@@ -25,8 +25,7 @@ Run the following commands on the laptop:
 ```bash
 cd ~
 
-git clone --filter=blob:none --sparse -b foxy \
-  https://github.com/khds97/autonomous-rc-drift.git
+git clone --filter=blob:none --sparse -b foxy https://github.com/khds97/autonomous-rc-drift.git
 
 cd ~/autonomous-rc-drift
 git sparse-checkout set foxy/laptop
