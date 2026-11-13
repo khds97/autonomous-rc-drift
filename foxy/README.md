@@ -4,7 +4,7 @@ ROS 2 Foxy version of the 1/10-scale autonomous RC drift car. The architecture i
 
 The Noetic implementation is on the `noetic` branch.
 
-**Status:** ported and unit-tested on a PC. It has not been built with `colcon` or run on the car yet (see [Testing](#testing)).
+**Status:** The Raspberry Pi 4 camera and IMU packages have been built with `colcon` and their ROS 2 topics have been verified on the Pi. The other Foxy components have PC-level unit and runtime tests as described below; the complete vehicle system has not yet been tested as an integrated setup.
 
 ## Layout
 
@@ -14,7 +14,8 @@ foxy/
 ├── RPi4/
 │   ├── driftmodel_msg/     msg/Sensors.msg
 │   ├── driftmodel/         sensor node (C++, pigpio, ADS1115), launch/
-│   └── camera_publisher/   dual USB camera publisher (V4L2, OpenCV), launch/
+│   ├── camera_publisher/   dual USB camera publisher (V4L2, OpenCV), launch/
+│   └── imu_publisher/      ISM330DHCX accelerometer and gyroscope publisher
 └── laptop/
     ├── driftmodel_msg/     msg/{Sensors,CtrlVal,PoseFlag}.msg, srv/Flag.srv
     └── driftmodel/         preprocess, model, usb_receiver, driftmodel_env,
@@ -31,7 +32,8 @@ Differences from the Noetic layout:
 - The laptop-side USB module is Python (`usb_receiver.py`) instead of C++, so there is no `include/` on the laptop.
 - Launch files are Python (`launch/*.py`). `demo.rviz` is a minimal rviz2 config (grid and odometry).
 - A separate `camera_publisher` package is included under `RPi4/` for the fixed and steering-linked rotating cameras. It publishes two grayscale image topics.
-- OpenVINS/VINS integration is not currently included. The camera package does not publish IMU or camera calibration data, and the two camera streams are not hardware-synchronized.
+- A separate `imu_publisher` package under `RPi4/` publishes accelerometer and gyroscope measurements from the Adafruit ISM330DHCX over I2C.
+- OpenVINS/VINS integration is not currently included. The camera package does not publish camera calibration data, and the two camera streams are not hardware-synchronized.
 - The recorded data and trained models were not carried over.
 
 ## Device-specific setup
@@ -94,7 +96,7 @@ git sparse-checkout init --cone
 git sparse-checkout set foxy/RPi4
 ```
 
-Create the ROS 2 workspace and link the two packages:
+Create the ROS 2 workspace and link the packages:
 
 ```bash
 mkdir -p ~/foxy_ws/src
@@ -113,12 +115,14 @@ colcon build
 source install/setup.bash
 ```
 
-Start the pigpio daemon and launch the sensor node:
+Start the pigpio daemon and launch the vehicle sensor node:
 
 ```bash
 sudo pigpiod
 ros2 launch driftmodel driftmodel.launch.py
 ```
+
+For the camera and IMU package build and run instructions, see [RPi4 README](RPi4/README.md).
 
 ### Updating an existing sparse checkout
 
@@ -201,11 +205,14 @@ I reviewed the Noetic code together with its recorded dataset (12,401 samples, 4
 
 | Part | Status |
 |---|---|
+| Raspberry Pi 4: `camera_publisher` | Built with `colcon` on the Pi; both camera image topics were verified publishing: `/camera/fixed/image_raw`, `/camera/rotating/image_raw` |
+| Raspberry Pi 4: `imu_publisher` | Built with `colcon` on the Pi; `/imu/data_raw` was verified publishing data from the ISM330DHCX |
 | Wheel speed and motor hall decoding (`wheelSpeed.hpp`) | Unit tests on a PC with synthetic pulses: 600-3000 rpm, tick wrap, timeout, late pulse, 4 wheels at different speeds, zero on stop |
 | `driver`, `pwm`, `ADS1115`, `I2Cdev` | Compiled with `-Wall -Wextra`. `driver` was linked and run against a stub pigpio |
 | Preprocessing, training, DAgger loop, USB parser, environment | Python tests with a fake serial port, a fake environment and stubbed ROS modules. Training was run on the old Noetic data converted to the new format |
-| `pubSensorData.cpp`, `driftmodel_node.cpp`, rclpy runtime, launch files, `demo.rviz` | Checked for syntax and structure only. Not built or run with ROS 2 |
-| Hardware (pigpio, ADS1115, STM32) | Not tested |
+| `pubSensorData.cpp`, `driftmodel_node.cpp`, laptop ROS 2 runtime, launch files, `demo.rviz` | Checked for syntax and structure only. The complete vehicle sensor and laptop system has not been tested end-to-end |
+| Hardware: camera and ISM330DHCX IMU | Built and run on Raspberry Pi 4; ROS 2 topic publishing verified |
+| Hardware: pigpio, ADS1115, STM32 controller and full vehicle integration | Not tested as an integrated system |
 
 ## Related
 
