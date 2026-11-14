@@ -1,8 +1,9 @@
 #include <chrono>
+#include <cstddef>
 #include <cstdint>
+#include <functional>
 #include <memory>
 #include <stdexcept>
-#include <functional>
 
 #include <fcntl.h>
 #include <linux/i2c-dev.h>
@@ -18,8 +19,24 @@ using namespace std::chrono_literals;
 class ImuPublisher : public rclcpp::Node
 {
 public:
-  ImuPublisher() : Node("ism330dhcx_publisher"), i2c_fd_(-1)
+  ImuPublisher()
+  : Node("ism330dhcx_publisher"),
+    i2c_fd_(-1),
+    calibration_sample_count_(0),
+    gyro_sum_x_(0.0),
+    gyro_sum_y_(0.0),
+    gyro_sum_z_(0.0),
+    gyro_bias_x_(0.0),
+    gyro_bias_y_(0.0),
+    gyro_bias_z_(0.0),
+    calibration_complete_(false)
   {
+    calibration_samples_target_ =
+      declare_parameter<int>("gyro_calibration_samples", 500);
+    if (calibration_samples_target_ <= 0) {
+      throw std::invalid_argument("gyro_calibration_samples must be greater than zero");
+    }
+
     openI2c();
     try {
       initializeSensor();
@@ -29,12 +46,19 @@ public:
       throw;
     }
 
-    publisher_ = create_publisher<sensor_msgs::msg::Imu>(
+    raw_publisher_ = create_publisher<sensor_msgs::msg::Imu>(
       "/imu/data_raw", rclcpp::SensorDataQoS());
+    calibrated_publisher_ = create_publisher<sensor_msgs::msg::Imu>(
+      "/imu/data_calibrated", rclcpp::SensorDataQoS());
+
     timer_ = create_wall_timer(
       10ms, std::bind(&ImuPublisher::publishImu, this));
 
-    RCLCPP_INFO(get_logger(), "Publishing on /imu/data_raw");
+    RCLCPP_INFO(
+      get_logger(),
+      "Publishing raw IMU data on /imu/data_raw. Keep the IMU stationary while "
+      "gyro bias calibration collects %d samples.",
+      calibration_samples_target_);
   }
 
   ~ImuPublisher() override
@@ -64,7 +88,18 @@ private:
   static constexpr double DEG_TO_RAD = 3.14159265358979323846 / 180.0;
 
   int i2c_fd_;
-  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr publisher_;
+  int calibration_samples_target_;
+  int calibration_sample_count_;
+  double gyro_sum_x_;
+  double gyro_sum_y_;
+  double gyro_sum_z_;
+  double gyro_bias_x_;
+  double gyro_bias_y_;
+  double gyro_bias_z_;
+  bool calibration_complete_;
+
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr raw_publisher_;
+  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr calibrated_publisher_;
   rclcpp::TimerBase::SharedPtr timer_;
 
   void openI2c()
@@ -132,6 +167,35 @@ private:
     return static_cast<int16_t>(value);
   }
 
+  void collectGyroCalibration(
+    double gyro_x, double gyro_y, double gyro_z)
+  {
+    if (calibration_complete_) {
+      return;
+    }
+
+    gyro_sum_x_ += gyro_x;
+    gyro_sum_y_ += gyro_y;
+    gyro_sum_z_ += gyro_z;
+    ++calibration_sample_count_;
+
+    if (calibration_sample_count_ >= calibration_samples_target_) {
+      const double sample_count =
+        static_cast<double>(calibration_sample_count_);
+      gyro_bias_x_ = gyro_sum_x_ / sample_count;
+      gyro_bias_y_ = gyro_sum_y_ / sample_count;
+      gyro_bias_z_ = gyro_sum_z_ / sample_count;
+      calibration_complete_ = true;
+
+      RCLCPP_INFO(
+        get_logger(),
+        "Gyro calibration complete. Bias [rad/s]: x=%.6f, y=%.6f, z=%.6f",
+        gyro_bias_x_, gyro_bias_y_, gyro_bias_z_);
+      RCLCPP_INFO(
+        get_logger(), "Publishing calibrated IMU data on /imu/data_calibrated");
+    }
+  }
+
   void publishImu()
   {
     try {
@@ -152,20 +216,36 @@ private:
       const int16_t ay_raw = toSigned(data[8], data[9]);
       const int16_t az_raw = toSigned(data[10], data[11]);
 
-      sensor_msgs::msg::Imu msg;
-      msg.header.stamp = get_clock()->now();
-      msg.header.frame_id = "imu_link";
-      msg.orientation_covariance[0] = -1.0;
+      const double gyro_x = gx_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
+      const double gyro_y = gy_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
+      const double gyro_z = gz_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
 
-      msg.angular_velocity.x = gx_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
-      msg.angular_velocity.y = gy_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
-      msg.angular_velocity.z = gz_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
+      sensor_msgs::msg::Imu raw_msg;
+      raw_msg.header.stamp = get_clock()->now();
+      raw_msg.header.frame_id = "imu_link";
+      raw_msg.orientation_covariance[0] = -1.0;
+      raw_msg.angular_velocity.x = gyro_x;
+      raw_msg.angular_velocity.y = gyro_y;
+      raw_msg.angular_velocity.z = gyro_z;
+      raw_msg.linear_acceleration.x =
+        ax_raw * ACCEL_SENSITIVITY * GRAVITY;
+      raw_msg.linear_acceleration.y =
+        ay_raw * ACCEL_SENSITIVITY * GRAVITY;
+      raw_msg.linear_acceleration.z =
+        az_raw * ACCEL_SENSITIVITY * GRAVITY;
 
-      msg.linear_acceleration.x = ax_raw * ACCEL_SENSITIVITY * GRAVITY;
-      msg.linear_acceleration.y = ay_raw * ACCEL_SENSITIVITY * GRAVITY;
-      msg.linear_acceleration.z = az_raw * ACCEL_SENSITIVITY * GRAVITY;
+      raw_publisher_->publish(raw_msg);
 
-      publisher_->publish(msg);
+      collectGyroCalibration(gyro_x, gyro_y, gyro_z);
+      if (!calibration_complete_) {
+        return;
+      }
+
+      sensor_msgs::msg::Imu calibrated_msg = raw_msg;
+      calibrated_msg.angular_velocity.x -= gyro_bias_x_;
+      calibrated_msg.angular_velocity.y -= gyro_bias_y_;
+      calibrated_msg.angular_velocity.z -= gyro_bias_z_;
+      calibrated_publisher_->publish(calibrated_msg);
     } catch (const std::exception & e) {
       RCLCPP_WARN_THROTTLE(
         get_logger(), *get_clock(), 2000, "IMU read failed: %s", e.what());
