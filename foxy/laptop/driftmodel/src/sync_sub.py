@@ -29,7 +29,7 @@ class SyncLogger(Node):
 
         self.declare_parameter('output', 'result.csv')
         self.declare_parameter('odom_topic', '/loop_fusion_node/odometry_rect')
-        self.declare_parameter('imu_topic', '/stereo_inertial_publisher/imu')
+        self.declare_parameter('imu_topic', '/imu/data_calibrated')
         self.declare_parameter('sensors_topic', 'sensors')
         self.declare_parameter('ctrl_val_topic', 'ctrl_val')
 
