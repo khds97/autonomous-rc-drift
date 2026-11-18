@@ -1,20 +1,23 @@
+#include <atomic>
 #include <chrono>
 #include <cstddef>
 #include <cstdint>
-#include <functional>
+#include <cstdio>
+#include <cstring>
 #include <memory>
 #include <stdexcept>
+#include <thread>
 
 #include <fcntl.h>
+#include <linux/gpio.h>
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
+#include <poll.h>
 #include <sys/ioctl.h>
 #include <unistd.h>
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
-
-using namespace std::chrono_literals;
 
 class ImuPublisher : public rclcpp::Node
 {
@@ -22,25 +25,23 @@ public:
   ImuPublisher()
   : Node("ism330dhcx_publisher"),
     i2c_fd_(-1),
-    calibration_sample_count_(0),
-    gyro_sum_x_(0.0),
-    gyro_sum_y_(0.0),
-    gyro_sum_z_(0.0),
-    gyro_bias_x_(0.0),
-    gyro_bias_y_(0.0),
-    gyro_bias_z_(0.0),
-    calibration_complete_(false)
+    gpio_chip_fd_(-1),
+    gpio_event_fd_(-1),
+    running_(false)
   {
-    calibration_samples_target_ =
-      declare_parameter<int>("gyro_calibration_samples", 500);
-    if (calibration_samples_target_ <= 0) {
-      throw std::invalid_argument("gyro_calibration_samples must be greater than zero");
-    }
-
     openI2c();
     try {
       initializeSensor();
+      openGpioInterrupt();
     } catch (...) {
+      if (gpio_event_fd_ >= 0) {
+        close(gpio_event_fd_);
+        gpio_event_fd_ = -1;
+      }
+      if (gpio_chip_fd_ >= 0) {
+        close(gpio_chip_fd_);
+        gpio_chip_fd_ = -1;
+      }
       close(i2c_fd_);
       i2c_fd_ = -1;
       throw;
@@ -48,39 +49,49 @@ public:
 
     raw_publisher_ = create_publisher<sensor_msgs::msg::Imu>(
       "/imu/data_raw", rclcpp::SensorDataQoS());
-    calibrated_publisher_ = create_publisher<sensor_msgs::msg::Imu>(
-      "/imu/data_calibrated", rclcpp::SensorDataQoS());
 
-    timer_ = create_wall_timer(
-      10ms, std::bind(&ImuPublisher::publishImu, this));
+    running_.store(true);
+    interrupt_thread_ = std::thread(&ImuPublisher::interruptLoop, this);
 
     RCLCPP_INFO(
       get_logger(),
-      "Publishing raw IMU data on /imu/data_raw. Keep the IMU stationary while "
-      "gyro bias calibration collects %d samples.",
-      calibration_samples_target_);
+      "ISM330DHCX interrupt publisher started: gpiochip0 line 23 (INT1), "
+      "publishing uncalibrated data on /imu/data_raw.");
   }
 
   ~ImuPublisher() override
   {
+    running_.store(false);
+    if (interrupt_thread_.joinable()) {
+      interrupt_thread_.join();
+    }
+
     if (i2c_fd_ >= 0) {
       try {
+        writeRegister(INT1_CTRL, 0x00);
         writeRegister(CTRL1_XL, 0x00);
         writeRegister(CTRL2_G, 0x00);
       } catch (...) {
       }
       close(i2c_fd_);
     }
+    if (gpio_event_fd_ >= 0) {
+      close(gpio_event_fd_);
+    }
+    if (gpio_chip_fd_ >= 0) {
+      close(gpio_chip_fd_);
+    }
   }
 
 private:
   static constexpr uint8_t I2C_ADDRESS = 0x6A;
   static constexpr uint8_t WHO_AM_I = 0x0F;
+  static constexpr uint8_t INT1_CTRL = 0x0D;
   static constexpr uint8_t CTRL1_XL = 0x10;
   static constexpr uint8_t CTRL2_G = 0x11;
   static constexpr uint8_t CTRL3_C = 0x12;
-  static constexpr uint8_t STATUS_REG = 0x1E;
   static constexpr uint8_t OUTX_L_G = 0x22;
+  static constexpr unsigned int GPIO_CHIP_LINE = 23;
 
   static constexpr double ACCEL_SENSITIVITY = 0.000061;
   static constexpr double GYRO_SENSITIVITY = 0.00875;
@@ -88,19 +99,12 @@ private:
   static constexpr double DEG_TO_RAD = 3.14159265358979323846 / 180.0;
 
   int i2c_fd_;
-  int calibration_samples_target_;
-  int calibration_sample_count_;
-  double gyro_sum_x_;
-  double gyro_sum_y_;
-  double gyro_sum_z_;
-  double gyro_bias_x_;
-  double gyro_bias_y_;
-  double gyro_bias_z_;
-  bool calibration_complete_;
+  int gpio_chip_fd_;
+  int gpio_event_fd_;
+  std::atomic<bool> running_;
+  std::thread interrupt_thread_;
 
   rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr raw_publisher_;
-  rclcpp::Publisher<sensor_msgs::msg::Imu>::SharedPtr calibrated_publisher_;
-  rclcpp::TimerBase::SharedPtr timer_;
 
   void openI2c()
   {
@@ -155,9 +159,32 @@ private:
     if (readRegister(WHO_AM_I) != 0x6B) {
       throw std::runtime_error("Unexpected WHO_AM_I value");
     }
+
     writeRegister(CTRL1_XL, 0x40);  // 104 Hz, +/-2 g
     writeRegister(CTRL2_G, 0x40);   // 104 Hz, +/-250 dps
     writeRegister(CTRL3_C, 0x44);   // BDU and IF_INC
+    writeRegister(INT1_CTRL, 0x03); // Accelerometer and gyroscope data ready on INT1
+  }
+
+  void openGpioInterrupt()
+  {
+    gpio_chip_fd_ = open("/dev/gpiochip0", O_RDONLY);
+    if (gpio_chip_fd_ < 0) {
+      throw std::runtime_error("Could not open /dev/gpiochip0");
+    }
+
+    struct gpioevent_request request = {};
+    request.lineoffset = GPIO_CHIP_LINE;
+    request.handleflags = GPIOHANDLE_REQUEST_INPUT;
+    request.eventflags = GPIOEVENT_REQUEST_RISING_EDGE;
+    std::strncpy(
+      request.consumer_label, "ism330dhcx_int1",
+      sizeof(request.consumer_label) - 1);
+
+    if (ioctl(gpio_chip_fd_, GPIO_GET_LINEEVENT_IOCTL, &request) < 0) {
+      throw std::runtime_error("Could not request rising-edge event on GPIO23");
+    }
+    gpio_event_fd_ = request.fd;
   }
 
   static int16_t toSigned(uint8_t low, uint8_t high)
@@ -167,88 +194,83 @@ private:
     return static_cast<int16_t>(value);
   }
 
-  void collectGyroCalibration(
-    double gyro_x, double gyro_y, double gyro_z)
+  void publishImu(uint64_t event_timestamp_ns)
   {
-    if (calibration_complete_) {
-      return;
+    uint8_t data[12] = {};
+    if (!readRegisters(OUTX_L_G, data, sizeof(data))) {
+      throw std::runtime_error("Could not read IMU output registers");
     }
 
-    gyro_sum_x_ += gyro_x;
-    gyro_sum_y_ += gyro_y;
-    gyro_sum_z_ += gyro_z;
-    ++calibration_sample_count_;
+    const int16_t gx_raw = toSigned(data[0], data[1]);
+    const int16_t gy_raw = toSigned(data[2], data[3]);
+    const int16_t gz_raw = toSigned(data[4], data[5]);
+    const int16_t ax_raw = toSigned(data[6], data[7]);
+    const int16_t ay_raw = toSigned(data[8], data[9]);
+    const int16_t az_raw = toSigned(data[10], data[11]);
 
-    if (calibration_sample_count_ >= calibration_samples_target_) {
-      const double sample_count =
-        static_cast<double>(calibration_sample_count_);
-      gyro_bias_x_ = gyro_sum_x_ / sample_count;
-      gyro_bias_y_ = gyro_sum_y_ / sample_count;
-      gyro_bias_z_ = gyro_sum_z_ / sample_count;
-      calibration_complete_ = true;
+    const double gyro_x = gx_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
+    const double gyro_y = gy_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
+    const double gyro_z = gz_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
 
-      RCLCPP_INFO(
-        get_logger(),
-        "Gyro calibration complete. Bias [rad/s]: x=%.6f, y=%.6f, z=%.6f",
-        gyro_bias_x_, gyro_bias_y_, gyro_bias_z_);
-      RCLCPP_INFO(
-        get_logger(), "Publishing calibrated IMU data on /imu/data_calibrated");
-    }
+    // GPIO event timestamps use CLOCK_MONOTONIC. Map that timestamp to the
+    // node clock so it can be compared with ROS messages from the same host.
+    const auto ros_now = get_clock()->now();
+    const int64_t steady_now_ns =
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::steady_clock::now().time_since_epoch()).count();
+    const int64_t event_age_ns =
+      steady_now_ns - static_cast<int64_t>(event_timestamp_ns);
+    const rclcpp::Time event_stamp(
+      ros_now.nanoseconds() - event_age_ns, ros_now.get_clock_type());
+
+    sensor_msgs::msg::Imu msg;
+    msg.header.stamp = event_stamp;
+    msg.header.frame_id = "imu_link";
+    msg.orientation_covariance[0] = -1.0;
+    msg.angular_velocity.x = gyro_x;
+    msg.angular_velocity.y = gyro_y;
+    msg.angular_velocity.z = gyro_z;
+    msg.linear_acceleration.x = ax_raw * ACCEL_SENSITIVITY * GRAVITY;
+    msg.linear_acceleration.y = ay_raw * ACCEL_SENSITIVITY * GRAVITY;
+    msg.linear_acceleration.z = az_raw * ACCEL_SENSITIVITY * GRAVITY;
+
+    raw_publisher_->publish(msg);
   }
 
-  void publishImu()
+  void interruptLoop()
   {
-    try {
-      const uint8_t status = readRegister(STATUS_REG);
-      if ((status & 0x03) != 0x03) {
-        return;
+    struct pollfd pfd = {};
+    pfd.fd = gpio_event_fd_;
+    pfd.events = POLLIN;
+
+    while (running_.load()) {
+      const int poll_result = poll(&pfd, 1, 100);
+      if (poll_result < 0) {
+        if (errno == EINTR) {
+          continue;
+        }
+        RCLCPP_ERROR(get_logger(), "GPIO event poll failed");
+        break;
+      }
+      if (poll_result == 0) {
+        continue;
       }
 
-      uint8_t data[12] = {};
-      if (!readRegisters(OUTX_L_G, data, sizeof(data))) {
-        throw std::runtime_error("Could not read IMU output registers");
+      struct gpioevent_data event = {};
+      const ssize_t bytes_read = read(gpio_event_fd_, &event, sizeof(event));
+      if (bytes_read != static_cast<ssize_t>(sizeof(event))) {
+        if (running_.load()) {
+          RCLCPP_WARN(get_logger(), "Could not read GPIO event");
+        }
+        continue;
       }
 
-      const int16_t gx_raw = toSigned(data[0], data[1]);
-      const int16_t gy_raw = toSigned(data[2], data[3]);
-      const int16_t gz_raw = toSigned(data[4], data[5]);
-      const int16_t ax_raw = toSigned(data[6], data[7]);
-      const int16_t ay_raw = toSigned(data[8], data[9]);
-      const int16_t az_raw = toSigned(data[10], data[11]);
-
-      const double gyro_x = gx_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
-      const double gyro_y = gy_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
-      const double gyro_z = gz_raw * GYRO_SENSITIVITY * DEG_TO_RAD;
-
-      sensor_msgs::msg::Imu raw_msg;
-      raw_msg.header.stamp = get_clock()->now();
-      raw_msg.header.frame_id = "imu_link";
-      raw_msg.orientation_covariance[0] = -1.0;
-      raw_msg.angular_velocity.x = gyro_x;
-      raw_msg.angular_velocity.y = gyro_y;
-      raw_msg.angular_velocity.z = gyro_z;
-      raw_msg.linear_acceleration.x =
-        ax_raw * ACCEL_SENSITIVITY * GRAVITY;
-      raw_msg.linear_acceleration.y =
-        ay_raw * ACCEL_SENSITIVITY * GRAVITY;
-      raw_msg.linear_acceleration.z =
-        az_raw * ACCEL_SENSITIVITY * GRAVITY;
-
-      raw_publisher_->publish(raw_msg);
-
-      collectGyroCalibration(gyro_x, gyro_y, gyro_z);
-      if (!calibration_complete_) {
-        return;
+      try {
+        publishImu(event.timestamp);
+      } catch (const std::exception & e) {
+        RCLCPP_WARN_THROTTLE(
+          get_logger(), *get_clock(), 2000, "IMU read failed: %s", e.what());
       }
-
-      sensor_msgs::msg::Imu calibrated_msg = raw_msg;
-      calibrated_msg.angular_velocity.x -= gyro_bias_x_;
-      calibrated_msg.angular_velocity.y -= gyro_bias_y_;
-      calibrated_msg.angular_velocity.z -= gyro_bias_z_;
-      calibrated_publisher_->publish(calibrated_msg);
-    } catch (const std::exception & e) {
-      RCLCPP_WARN_THROTTLE(
-        get_logger(), *get_clock(), 2000, "IMU read failed: %s", e.what());
     }
   }
 };
