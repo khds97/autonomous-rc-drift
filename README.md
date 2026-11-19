@@ -81,7 +81,7 @@ The Raspberry Pi and the laptop exchange the ROS 2 topics over the network (Wi-F
 | Topic | Message | Source | Rate |
 |---|---|---|---|
 | `/camera/fixed/image_raw`, `/camera/rotating/image_raw` | `sensor_msgs/Image` (mono8, 640 x 480) | `camera_publisher` | 30 FPS per camera (configured) |
-| `/imu/data_raw`, `/imu/data_calibrated` | `sensor_msgs/Imu` | `imu_publisher` | 104 Hz sensor output |
+| `/imu/data_raw`, `/imu/data_calibrated` | `sensor_msgs/Imu` | `imu_publisher` | 208 Hz sensor output |
 | `/sensors` | `driftmodel_msg/Sensors` (motor rpm, four wheel speeds, `tire_pwm`, current) | `driftmodel` | 34 Hz (configured) |
 | `/ctrl_val` | `driftmodel_msg/CtrlVal` (steering, throttle, mode, punishment) | `usb_receiver` | 100 Hz |
 | `/loop_fusion_node/odometry_rect` | `nav_msgs/Odometry` | visual-inertial odometry | - |

@@ -105,7 +105,11 @@ source ~/autonomous-rc-drift/foxy/RPi4/install/setup.bash
 
 ### IMU
 
-The ISM330DHCX driver currently uses I2C bus 0 and address `0x6A`.
+The ISM330DHCX driver currently uses I2C bus 0 and address `0x6A`. The sensor INT1 pin is wired to GPIO 23 (header pin 16), and the node needs libgpiod:
+
+```bash
+sudo apt install libgpiod-dev gpiod
+```
 
 ```bash
 ros2 run imu_publisher imu_node

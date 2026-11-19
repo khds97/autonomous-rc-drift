@@ -20,6 +20,8 @@ ament_target_dependencies(imu_node
   sensor_msgs
 )
 
+target_link_libraries(imu_node gpiod)
+
 install(TARGETS imu_node
   DESTINATION lib/${PROJECT_NAME}
 )

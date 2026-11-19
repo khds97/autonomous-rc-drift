@@ -1,77 +1,90 @@
 # IMU Publisher
 
-ROS 2 Foxy package for an Adafruit ISM330DHCX 6-DoF IMU connected to the Raspberry Pi 4 over I2C.
+ROS 2 Foxy package for an Adafruit ISM330DHCX 6-DoF IMU connected to the Raspberry Pi 4 over I2C. The node is interrupt driven: the sensor signals every new sample on its INT1 pin, and the node reads and publishes that sample.
 
 ## Connection
 
-- I2C device: /dev/i2c-0
-- I2C address: 0x6A
-- WHO_AM_I: 0x6B
+| Signal | Connection |
+|---|---|
+| I2C device | `/dev/i2c-0`, address `0x6A` (WHO_AM_I `0x6B`) |
+| INT1 | GPIO 23 (header pin 16) on `gpiochip0` |
+
+## Requirements
+
+The GPIO edge events are read with libgpiod (1.x API):
+
+```bash
+sudo apt install libgpiod-dev gpiod
+```
+
+Check the INT1 wiring before starting the node. The sensor has to be running for edges to appear, so start the node first and look at the line from another terminal, or configure the sensor by hand and watch the pin with `gpiomon --rising-edge gpiochip0 23`.
 
 ## Published topics
 
 | Topic | Message type | Description |
 |---|---|---|
-| /imu/data_raw | sensor_msgs/msg/Imu | Unmodified angular velocity and linear acceleration |
-| /imu/data_calibrated | sensor_msgs/msg/Imu | Gyroscope bias-corrected angular velocity and unchanged linear acceleration |
+| `/imu/data_raw` | `sensor_msgs/msg/Imu` | Unmodified angular velocity (rad/s) and linear acceleration (m/s^2) |
 
-Both messages use imu_link as the frame ID. Angular velocity is published in rad/s and linear acceleration in m/s^2. Orientation is not estimated by this node.
+The frame ID is `imu_link`. Orientation is not estimated by this node (`orientation_covariance[0] = -1`).
 
 ## Sensor configuration
 
-- Accelerometer: 104 Hz, +/-2 g
-- Gyroscope: 104 Hz, +/-250 dps
-- Block data update enabled
-- Register address auto-increment enabled
+- Accelerometer: 208 Hz, +/-4 g
+- Gyroscope: 208 Hz, +/-1000 dps
+- Block data update and register address auto-increment enabled
+- The sensor is software-reset at startup
+- Gyroscope data-ready is routed to INT1 as a short pulse, one rising edge per sample. The accelerometer runs at the same output rate, so both are read after each edge.
 
-The node checks the accelerometer and gyroscope data-ready flags before reading the output registers. The ROS timer polls at 100 Hz; the actual publish rate depends on the sensor data-ready status.
+If you change the output rate or the full-scale ranges, update the sensitivity constants in `src/imu_node.cpp` as well.
 
-## Gyroscope bias calibration
+## Timestamps
 
-At startup, the node collects 500 valid gyroscope samples while the IMU is stationary. It calculates the mean angular velocity on each axis and subtracts those values from subsequent gyroscope measurements.
+The header stamp is the time of the INT1 edge reported by the kernel, converted to the node clock. If the edge time does not look like the current time, the node falls back to the time of reading. The node logs the publish rate and the number of missed samples every 5 seconds.
 
-During calibration:
-- /imu/data_raw is published immediately.
-- /imu/data_calibrated is not published until calibration is complete.
-- Keep the vehicle and IMU completely still until the calibration-complete message appears.
+## Parameters
 
-The default sample count can be changed with a ROS parameter:
+| Parameter | Default | Description |
+|---|---|---|
+| `i2c_device` | `/dev/i2c-0` | I2C bus device |
+| `frame_id` | `imu_link` | Frame ID of the published messages |
+| `gpio_chip` | `gpiochip0` | GPIO chip the INT1 pin is connected to |
+| `gpio_line` | `23` | Line offset (BCM number on a Raspberry Pi 4) |
+| `event_timeout_ms` | `200` | Warn if no edge arrives for this long |
+
+Example:
 
 ```bash
-ros2 run imu_publisher imu_node --ros-args -p gyro_calibration_samples:=1000
+ros2 run imu_publisher imu_node --ros-args -p gpio_line:=23
 ```
-
-At the configured 104 Hz sensor output rate, 500 samples take approximately 4.8 seconds and 1,000 samples take approximately 9.6 seconds.
-
-This initial implementation calibrates the gyroscope only. Accelerometer bias calibration is not applied because a reliable accelerometer bias estimate requires measurements in multiple known orientations; simply subtracting gravity from one stationary pose can introduce an incorrect offset.
 
 ## Build
 
 ```bash
-cd ~/foxy_ws
-colcon build --packages-select imu_publisher
+cd ~/autonomous-rc-drift/foxy/RPi4
+source /opt/ros/foxy/setup.bash
+colcon build --symlink-install --packages-select imu_publisher
 source install/setup.bash
 ```
 
 ## Run
 
-Make sure the user running the node has permission to access the I2C device. On Ubuntu, this can usually be granted by adding the user to the i2c group and logging in again.
+The user running the node needs access to `/dev/i2c-0` (the `i2c` group) and to `/dev/gpiochip0` (the `gpio` group). Log out and back in after changing groups.
 
 ```bash
 ros2 run imu_publisher imu_node
 ```
 
-Check the topics:
+Check the topic:
 
 ```bash
 ros2 topic echo /imu/data_raw
-ros2 topic echo /imu/data_calibrated
-ros2 topic hz /imu/data_calibrated
+ros2 topic hz /imu/data_raw
 ```
+
+With the IMU lying still, the gyroscope values should be close to zero and the acceleration magnitude close to 9.8 m/s^2.
 
 ## Notes
 
-- The message timestamp is assigned when the ROS message is published, not at the hardware measurement time.
 - Sensor axes are published as reported by the IMU. No vehicle-frame rotation is applied.
-- The orientation field is left unavailable.
+- Gyroscope and accelerometer biases are not corrected in this node.
 - Camera-to-IMU calibration and time-offset calibration are not part of this package.
