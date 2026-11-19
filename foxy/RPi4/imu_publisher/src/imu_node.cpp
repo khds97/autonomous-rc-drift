@@ -32,7 +32,6 @@
 #include <stdexcept>
 #include <string>
 #include <thread>
-#include <time.h>
 
 #include <fcntl.h>
 #include <gpiod.h>
@@ -311,37 +310,20 @@ private:
     return static_cast<int16_t>(value);
   }
 
-  // Edge timestamp from the kernel, converted to the node clock. Depending on the
-  // kernel the edge time is CLOCK_REALTIME or CLOCK_MONOTONIC, so test both and
-  // use the one that gives a plausible age. If neither does, use the current time.
+  // Edge timestamp from the kernel. With the v1 GPIO uAPI (libgpiod 1.x) this is
+  // CLOCK_REALTIME, which matches the ROS clock. If it does not look like the
+  // current time (different clock, sim time), fall back to the current time.
   rclcpp::Time stampFromEvent(const gpiod_line_event & ev)
   {
     const rclcpp::Time now = get_clock()->now();
-    const int64_t event_ns =
+    const int64_t ns =
       static_cast<int64_t>(ev.ts.tv_sec) * 1000000000LL + ev.ts.tv_nsec;
-
-    constexpr int64_t kMinAgeNs = -5000000;    // edge may not be in the future
-    constexpr int64_t kMaxAgeNs = 50000000;    // and not older than 50 ms
-
-    const int64_t real_age = clockNs(CLOCK_REALTIME) - event_ns;
-    const int64_t mono_age = clockNs(CLOCK_MONOTONIC) - event_ns;
-
-    int64_t age_ns;
-    if (real_age >= kMinAgeNs && real_age <= kMaxAgeNs) {
-      age_ns = real_age;
-    } else if (mono_age >= kMinAgeNs && mono_age <= kMaxAgeNs) {
-      age_ns = mono_age;
-    } else {
+    const rclcpp::Time edge(ns, get_clock()->get_clock_type());
+    const double age = (now - edge).seconds();
+    if (age < -0.005 || age > 0.05) {
       return now;
     }
-    return rclcpp::Time(now.nanoseconds() - age_ns, now.get_clock_type());
-  }
-
-  static int64_t clockNs(clockid_t id)
-  {
-    timespec t;
-    clock_gettime(id, &t);
-    return static_cast<int64_t>(t.tv_sec) * 1000000000LL + t.tv_nsec;
+    return edge;
   }
 
   void irqLoop()
