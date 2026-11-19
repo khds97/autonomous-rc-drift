@@ -42,6 +42,7 @@
 
 #include "rclcpp/rclcpp.hpp"
 #include "sensor_msgs/msg/imu.hpp"
+#include "sensor_publisher/time_utils.hpp"
 
 using namespace std::chrono_literals;
 
@@ -310,20 +311,23 @@ private:
     return static_cast<int16_t>(value);
   }
 
-  // Edge timestamp from the kernel. With the v1 GPIO uAPI (libgpiod 1.x) this is
-  // CLOCK_REALTIME, which matches the ROS clock. If it does not look like the
-  // current time (different clock, sim time), fall back to the current time.
+  // Edge timestamp from the kernel, converted to the node clock. If the kernel
+  // time is not on a known clock, the time of reading is used instead.
   rclcpp::Time stampFromEvent(const gpiod_line_event & ev)
   {
-    const rclcpp::Time now = get_clock()->now();
-    const int64_t ns =
+    const int64_t event_ns =
       static_cast<int64_t>(ev.ts.tv_sec) * 1000000000LL + ev.ts.tv_nsec;
-    const rclcpp::Time edge(ns, get_clock()->get_clock_type());
-    const double age = (now - edge).seconds();
-    if (age < -0.005 || age > 0.05) {
-      return now;
+
+    bool from_kernel = true;
+    const rclcpp::Time stamp = sensor_publisher::kernelEventToRosTime(
+      *get_clock(), event_ns, 50000000LL, &from_kernel);
+
+    if (!from_kernel) {
+      RCLCPP_WARN_THROTTLE(
+        get_logger(), *get_clock(), 5000,
+        "GPIO edge time is not on a known clock, using the time of reading");
     }
-    return edge;
+    return stamp;
   }
 
   void irqLoop()

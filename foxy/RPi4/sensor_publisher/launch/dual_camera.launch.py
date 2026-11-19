@@ -5,7 +5,7 @@ from launch_ros.actions import Node
 def generate_launch_description():
     return LaunchDescription([
         Node(
-            package='camera_publisher',
+            package='sensor_publisher',
             executable='dual_camera_publisher',
             name='dual_camera_publisher',
             output='screen',

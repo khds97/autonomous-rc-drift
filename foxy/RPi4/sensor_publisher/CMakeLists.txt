@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.5)
-project(camera_publisher)
+project(sensor_publisher)
 
 if(NOT CMAKE_CXX_STANDARD)
   set(CMAKE_CXX_STANDARD 14)
@@ -18,10 +18,12 @@ find_package(cv_bridge REQUIRED)
 find_package(OpenCV REQUIRED)
 find_package(Threads REQUIRED)
 
+# Dual camera publisher (V4L2)
 add_executable(dual_camera_publisher
   src/dual_camera_publisher.cpp)
 
 target_include_directories(dual_camera_publisher PRIVATE
+  include
   ${OpenCV_INCLUDE_DIRS})
 
 ament_target_dependencies(dual_camera_publisher
@@ -35,7 +37,24 @@ target_link_libraries(dual_camera_publisher
   ${OpenCV_LIBRARIES}
   Threads::Threads)
 
-install(TARGETS dual_camera_publisher
+# IMU publisher (ISM330DHCX, data-ready interrupt on a GPIO line via libgpiod)
+add_executable(imu_node
+  src/imu_node.cpp)
+
+target_include_directories(imu_node PRIVATE
+  include)
+
+ament_target_dependencies(imu_node
+  rclcpp
+  sensor_msgs)
+
+target_link_libraries(imu_node
+  gpiod
+  Threads::Threads)
+
+install(TARGETS
+  dual_camera_publisher
+  imu_node
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY launch

@@ -44,8 +44,8 @@ The repository contains development work across different ROS environments:
 flowchart LR
   subgraph Car["On the car"]
     subgraph Pi["Raspberry Pi 4 (ROS 2 Foxy)"]
-      CAM["camera_publisher"]
-      IMU["imu_publisher"]
+      CAM["dual_camera_publisher"]
+      IMU["imu_node"]
       SEN["driftmodel sensor node"]
     end
     subgraph STM["STM32 controller"]
@@ -80,8 +80,8 @@ The Raspberry Pi and the laptop exchange the ROS 2 topics over the network (Wi-F
 
 | Topic | Message | Source | Rate |
 |---|---|---|---|
-| `/camera/fixed/image_raw`, `/camera/rotating/image_raw` | `sensor_msgs/Image` (mono8, 640 x 480) | `camera_publisher` | 30 FPS per camera (configured) |
-| `/imu/data_raw`, `/imu/data_calibrated` | `sensor_msgs/Imu` | `imu_publisher` | 208 Hz sensor output |
+| `/camera/fixed/image_raw`, `/camera/rotating/image_raw` | `sensor_msgs/Image` (mono8, 640 x 480) | `sensor_publisher` | 30 FPS per camera (configured) |
+| `/imu/data_raw`, `/imu/data_calibrated` | `sensor_msgs/Imu` | `sensor_publisher` | 208 Hz sensor output |
 | `/sensors` | `driftmodel_msg/Sensors` (motor rpm, four wheel speeds, `tire_pwm`, current) | `driftmodel` | 34 Hz (configured) |
 | `/ctrl_val` | `driftmodel_msg/CtrlVal` (steering, throttle, mode, punishment) | `usb_receiver` | 100 Hz |
 | `/loop_fusion_node/odometry_rect` | `nav_msgs/Odometry` | visual-inertial odometry | - |
@@ -95,7 +95,7 @@ Results are recorded as they are measured. Empty results mean that the test has 
 | Part | Condition | Success criterion | Result |
 |---|---|---|---|
 | Camera streams | Both cameras on the Pi, 640 x 480, 30 FPS | Both topics publish at the configured rate | Both topics verified publishing. Rate and CPU load not recorded yet |
-| Rotating camera | Steering turned with the transmitter | Camera turns together with the front wheels | Observed, see [`camera_publisher`](foxy/RPi4/camera_publisher/README.md). The camera angle is not measured |
+| Rotating camera | Steering turned with the transmitter | Camera turns together with the front wheels | Observed, see [`sensor_publisher`](foxy/RPi4/sensor_publisher/README.md). The camera angle is not measured |
 | IMU gyroscope | Vehicle stationary, 500 samples at startup | Mean angular velocity close to zero after calibration | `/imu/data_raw` verified. Before and after values not recorded yet |
 | Wheel and motor speed | Synthetic pulses, 600 to 3000 rpm, timeout, tick wrap, four wheels | Computed rpm matches the input | Unit tests pass. Not measured on the car |
 | Behavior-cloning model, offline | Noetic dataset (12,401 samples), 5-fold temporal cross-validation | Lower error than the baselines | Steering MSE 0.167 without `tire_pwm`, 0.19 for the mean predictor, 0.028 for repeating the previous action. The model is not better than the last baseline, so offline error alone is not enough |
@@ -135,6 +135,6 @@ The ROS 1 Noetic implementation is in the `noetic` branch (`noetic/`).
 
 ## Project Status
 
-The Raspberry Pi 4 camera and IMU packages have been built with `colcon`, and their ROS 2 topics have been verified publishing on the Pi. The IMU bias calibration and further sensor checks are in progress. The remaining vehicle sensor hardware, STM32 controller, and complete laptop-to-car integration have not yet been verified as an integrated system.
+The Raspberry Pi 4 camera and IMU publishers were built with `colcon` and verified publishing on the Pi as separate packages. They have since been merged into `sensor_publisher` with capture-time timestamps, and that merged package has not been rebuilt or verified on the Pi yet. Further sensor checks are in progress. The remaining vehicle sensor hardware, STM32 controller, and complete laptop-to-car integration have not yet been verified as an integrated system.
 
 See [Foxy Testing](foxy/README.md#testing) for component-level test details.

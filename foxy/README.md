@@ -4,7 +4,7 @@ ROS 2 Foxy version of the 1/10-scale autonomous RC drift car. The architecture i
 
 The Noetic implementation is on the `noetic` branch.
 
-**Status:** The Raspberry Pi 4 camera and IMU packages have been built with `colcon` and their ROS 2 topics have been verified on the Pi. The other Foxy components have PC-level unit and runtime tests as described below; the complete vehicle system has not yet been tested as an integrated setup.
+**Status:** The Raspberry Pi 4 camera and IMU publishers were built with `colcon` and verified on the Pi as separate packages. They have since been merged into `sensor_publisher`, which has not been rebuilt or verified on the Pi yet. The other Foxy components have PC-level unit and runtime tests as described below; the complete vehicle system has not yet been tested as an integrated setup.
 
 ## Layout
 
@@ -14,8 +14,7 @@ foxy/
 ├── RPi4/
 │   ├── driftmodel_msg/     msg/Sensors.msg
 │   ├── driftmodel/         sensor node (C++, pigpio, ADS1115), launch/
-│   ├── camera_publisher/   dual USB camera publisher (V4L2, OpenCV), launch/
-│   └── imu_publisher/      ISM330DHCX accelerometer and gyroscope publisher
+│   └── sensor_publisher/   dual USB camera publisher (V4L2, OpenCV) and ISM330DHCX IMU publisher, launch/
 └── laptop/
     ├── driftmodel_msg/     msg/{Sensors,CtrlVal,PoseFlag}.msg, srv/Flag.srv
     └── driftmodel/         preprocess, model, usb_receiver, driftmodel_env,
@@ -31,8 +30,7 @@ Differences from the Noetic layout:
 - `msg/` and `srv/` are at the package root and the names are CamelCase (required by ROS 2).
 - The laptop-side USB module is Python (`usb_receiver.py`) instead of C++, so there is no `include/` on the laptop.
 - Launch files are Python (`launch/*.py`). `demo.rviz` is a minimal rviz2 config (grid and odometry).
-- A separate `camera_publisher` package is included under `RPi4/` for the fixed and steering-linked rotating cameras. It publishes two grayscale image topics.
-- A separate `imu_publisher` package under `RPi4/` publishes accelerometer and gyroscope measurements from the Adafruit ISM330DHCX over I2C.
+- A separate `sensor_publisher` package under `RPi4/` publishes two grayscale image topics (fixed and steering-linked rotating cameras) and the accelerometer and gyroscope measurements of the Adafruit ISM330DHCX, all stamped with their capture time.
 - OpenVINS/VINS integration is not currently included. The camera package does not publish camera calibration data, and the two camera streams are not hardware-synchronized.
 - The recorded data and trained models were not carried over.
 
@@ -205,8 +203,7 @@ I reviewed the Noetic code together with its recorded dataset (12,401 samples, 4
 
 | Part | Status |
 |---|---|
-| Raspberry Pi 4: `camera_publisher` | Built with `colcon` on the Pi; both camera image topics were verified publishing: `/camera/fixed/image_raw`, `/camera/rotating/image_raw` |
-| Raspberry Pi 4: `imu_publisher` | Built with `colcon` on the Pi; `/imu/data_raw` was verified publishing data from the ISM330DHCX |
+| Raspberry Pi 4: `sensor_publisher` | Merged from the former `camera_publisher` and `imu_publisher`. The former packages were built on the Pi and verified publishing both camera topics and `/imu/data_raw`; the merged package, the capture-time stamps and the libgpiod IMU node have not been built or run on the Pi yet |
 | Wheel speed and motor hall decoding (`wheelSpeed.hpp`) | Unit tests on a PC with synthetic pulses: 600-3000 rpm, tick wrap, timeout, late pulse, 4 wheels at different speeds, zero on stop |
 | `driver`, `pwm`, `ADS1115`, `I2Cdev` | Compiled with `-Wall -Wextra`. `driver` was linked and run against a stub pigpio |
 | Preprocessing, training, DAgger loop, USB parser, environment | Python tests with a fake serial port, a fake environment and stubbed ROS modules. Training was run on the old Noetic data converted to the new format |

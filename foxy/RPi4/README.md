@@ -8,8 +8,7 @@ ROS 2 Foxy packages for the Raspberry Pi 4.
 |---|---|
 | `driftmodel_msg` | Custom `Sensors` message definitions |
 | `driftmodel` | Vehicle sensor data node |
-| `camera_publisher` | Publishes images from the fixed and rotating cameras |
-| `imu_publisher` | Publishes accelerometer and gyroscope data from the ISM330DHCX |
+| `sensor_publisher` | Publishes images from the fixed and rotating cameras and accelerometer and gyroscope data from the ISM330DHCX |
 
 ## Requirements
 
@@ -103,7 +102,17 @@ source ~/autonomous-rc-drift/foxy/RPi4/install/setup.bash
 
 ## Run
 
-### IMU
+### Cameras and IMU
+
+Start both publishers with one launch file:
+
+```bash
+ros2 launch sensor_publisher sensors.launch.py
+```
+
+See the [`sensor_publisher` README](sensor_publisher/README.md) for the parameters and the timestamps. The nodes can also be started separately, as described below.
+
+#### IMU
 
 The ISM330DHCX driver currently uses I2C bus 0 and address `0x6A`. The sensor INT1 pin is wired to GPIO 23 (header pin 16), and the node needs libgpiod:
 
@@ -112,7 +121,7 @@ sudo apt install libgpiod-dev gpiod
 ```
 
 ```bash
-ros2 run imu_publisher imu_node
+ros2 run sensor_publisher imu_node
 ```
 
 Check the published data:
@@ -124,12 +133,12 @@ ros2 topic hz /imu/data_raw
 
 The user running the node must have permission to access `/dev/i2c-0`. If necessary, add the user to the `i2c` group and log out and back in.
 
-### Cameras
+#### Cameras
 
 Start the dual-camera publisher:
 
 ```bash
-ros2 launch camera_publisher dual_camera.launch.py
+ros2 launch sensor_publisher dual_camera.launch.py
 ```
 
 Image topics:

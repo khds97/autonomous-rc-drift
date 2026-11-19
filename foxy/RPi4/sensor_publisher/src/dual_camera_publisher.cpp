@@ -2,6 +2,8 @@
 // dual_camera_publisher.cpp
 // Raspberry Pi 4 - Dual camera publisher
 // V4L2 direct access: MJPG -> grayscale decode (skip BGR conversion)
+// Each frame is stamped with the V4L2 buffer time (when the frame arrived),
+// converted to the ROS clock, so the stamps line up with the IMU stamps.
 // ROS2 Foxy, C++
 // ============================================
 
@@ -9,12 +11,16 @@
 #include <sensor_msgs/msg/image.hpp>
 #include <std_msgs/msg/header.hpp>
 #include <image_transport/image_transport.hpp>
+#include "sensor_publisher/time_utils.hpp"
 #include <cv_bridge/cv_bridge.h>
 #include <opencv2/opencv.hpp>
 #include <memory>
 #include <chrono>
 #include <thread>
 #include <atomic>
+#include <cmath>
+#include <cstdint>
+#include <string>
 #include <vector>
 
 // V4L2 headers
@@ -58,7 +64,12 @@ public:
         parm.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         parm.parm.capture.timeperframe.numerator   = 1;
         parm.parm.capture.timeperframe.denominator = fps;
-        ioctl(fd_, VIDIOC_S_PARM, &parm);
+        if (ioctl(fd_, VIDIOC_S_PARM, &parm) == 0 &&
+            parm.parm.capture.timeperframe.numerator != 0) {
+            // The driver writes back the frame interval it actually accepted
+            actual_fps_ = static_cast<double>(parm.parm.capture.timeperframe.denominator) /
+                          parm.parm.capture.timeperframe.numerator;
+        }
 
         // Request buffers
         v4l2_requestbuffers req{};
@@ -89,8 +100,10 @@ public:
         return ioctl(fd_, VIDIOC_STREAMON, &type) >= 0;
     }
 
-    // Capture MJPG and decode directly as grayscale
-    bool read(cv::Mat& gray)
+    // Capture MJPG and decode directly as grayscale.
+    // frame_ns is the V4L2 buffer time of the frame in nanoseconds (kernel clock),
+    // or 0 if the driver gives no time.
+    bool read(cv::Mat& gray, int64_t* frame_ns)
     {
         // Wait for frame (100ms timeout)
         fd_set fds;
@@ -103,6 +116,13 @@ public:
         buf.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         buf.memory = V4L2_MEMORY_MMAP;
         if (ioctl(fd_, VIDIOC_DQBUF, &buf) < 0) return false;
+
+        if ((buf.flags & V4L2_BUF_FLAG_TIMESTAMP_MASK) == V4L2_BUF_FLAG_TIMESTAMP_UNKNOWN) {
+            *frame_ns = 0;
+        } else {
+            *frame_ns = static_cast<int64_t>(buf.timestamp.tv_sec) * 1000000000LL +
+                        static_cast<int64_t>(buf.timestamp.tv_usec) * 1000LL;
+        }
 
         // Decode MJPG directly as grayscale (skip BGR entirely)
         std::vector<uchar> mjpg_data(
@@ -130,8 +150,12 @@ public:
 
     ~V4L2Camera() { close(); }
 
+    // Frame rate the driver accepted, 0 if unknown
+    double actual_fps() const { return actual_fps_; }
+
 private:
     int fd_;
+    double actual_fps_ = 0.0;
     std::vector<V4L2Buffer> buffers_;
 };
 
@@ -149,12 +173,18 @@ public:
         this->declare_parameter("width",  640);
         this->declare_parameter("height", 480);
         this->declare_parameter("fps",    30);
+        // Constant shift added to each camera's stamps [s]. A positive value moves
+        // the stamps later. Use it to correct a measured camera-to-IMU time offset.
+        this->declare_parameter("fixed_time_offset_s",    0.0);
+        this->declare_parameter("rotating_time_offset_s", 0.0);
 
         auto fixed_dev    = this->get_parameter("fixed_device").as_string();
         auto rotating_dev = this->get_parameter("rotating_device").as_string();
         width_  = this->get_parameter("width").as_int();
         height_ = this->get_parameter("height").as_int();
         fps_    = this->get_parameter("fps").as_int();
+        const double fixed_offset_s    = this->get_parameter("fixed_time_offset_s").as_double();
+        const double rotating_offset_s = this->get_parameter("rotating_time_offset_s").as_double();
 
         // --- Open cameras ---
         if (!fixed_cam_.open(fixed_dev, width_, height_, fps_)) {
@@ -168,14 +198,23 @@ public:
 
         RCLCPP_INFO(this->get_logger(),
             "Dual cameras initialized | Resolution: %dx%d | FPS: %d", width_, height_, fps_);
+        warn_if_fps_differs("fixed", fixed_cam_.actual_fps());
+        warn_if_fps_differs("rotating", rotating_cam_.actual_fps());
 
         // --- Publishers ---
         fixed_pub_    = image_transport::create_publisher(this, "/camera/fixed/image_raw");
         rotating_pub_ = image_transport::create_publisher(this, "/camera/rotating/image_raw");
 
         // --- Start capture threads ---
-        fixed_thread_    = std::thread(&DualCameraPublisher::fixed_capture_loop, this);
-        rotating_thread_ = std::thread(&DualCameraPublisher::rotating_capture_loop, this);
+        // The loops are paced by the cameras: each iteration waits for the next frame.
+        fixed_thread_ = std::thread(
+            &DualCameraPublisher::capture_loop, this, std::ref(fixed_cam_),
+            std::ref(fixed_pub_), std::string("fixed"),
+            std::string("fixed_camera_link"), fixed_offset_s);
+        rotating_thread_ = std::thread(
+            &DualCameraPublisher::capture_loop, this, std::ref(rotating_cam_),
+            std::ref(rotating_pub_), std::string("rotating"),
+            std::string("rotating_camera_link"), rotating_offset_s);
     }
 
     ~DualCameraPublisher()
@@ -186,56 +225,72 @@ public:
     }
 
 private:
-    void fixed_capture_loop()
+    void warn_if_fps_differs(const char* name, double actual_fps)
     {
-        int interval_ms = 1000 / fps_;
-        while (running_ && rclcpp::ok()) {
-            auto start = std::chrono::steady_clock::now();
-
-            cv::Mat gray;
-            if (fixed_cam_.read(gray)) {
-                publish_frame(fixed_pub_, gray, "fixed_camera_link");
-            } else {
-                RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(),
-                    2000, "Failed to read fixed camera frame");
-            }
-
-            auto elapsed    = std::chrono::steady_clock::now() - start;
-            auto sleep_time = std::chrono::milliseconds(interval_ms) - elapsed;
-            if (sleep_time > std::chrono::milliseconds(0))
-                std::this_thread::sleep_for(sleep_time);
+        if (actual_fps > 0.0 && std::abs(actual_fps - fps_) > 0.5) {
+            RCLCPP_WARN(this->get_logger(),
+                "%s camera: requested %d FPS, driver accepted %.1f FPS",
+                name, fps_, actual_fps);
         }
     }
 
-    void rotating_capture_loop()
+    void capture_loop(
+        V4L2Camera& cam,
+        image_transport::Publisher& pub,
+        const std::string& name,
+        const std::string& frame_id,
+        double time_offset_s)
     {
-        int interval_ms = 1000 / fps_;
-        while (running_ && rclcpp::ok()) {
-            auto start = std::chrono::steady_clock::now();
+        auto rate_start = std::chrono::steady_clock::now();
+        int frame_count = 0;
 
+        while (running_ && rclcpp::ok()) {
             cv::Mat gray;
-            if (rotating_cam_.read(gray)) {
-                publish_frame(rotating_pub_, gray, "rotating_camera_link");
+            int64_t frame_ns = 0;
+            if (cam.read(gray, &frame_ns)) {
+                publish_frame(pub, gray, frame_id, frame_ns, time_offset_s);
+                ++frame_count;
             } else {
                 RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(),
-                    2000, "Failed to read rotating camera frame");
+                    2000, "Failed to read %s camera frame", name.c_str());
+                std::this_thread::sleep_for(1ms);
             }
 
-            auto elapsed    = std::chrono::steady_clock::now() - start;
-            auto sleep_time = std::chrono::milliseconds(interval_ms) - elapsed;
-            if (sleep_time > std::chrono::milliseconds(0))
-                std::this_thread::sleep_for(sleep_time);
+            // Report the achieved frame rate every 5 s
+            const auto now = std::chrono::steady_clock::now();
+            const double elapsed = std::chrono::duration<double>(now - rate_start).count();
+            if (elapsed >= 5.0) {
+                RCLCPP_INFO(this->get_logger(), "%s camera: %.1f FPS",
+                    name.c_str(), frame_count / elapsed);
+                frame_count = 0;
+                rate_start = now;
+            }
         }
     }
 
     void publish_frame(
         image_transport::Publisher& pub,
         const cv::Mat& gray,
-        const std::string& frame_id)
+        const std::string& frame_id,
+        int64_t frame_ns,
+        double time_offset_s)
     {
+        // Frames can wait in the V4L2 queue for up to a couple of frame periods
+        bool from_kernel = true;
+        rclcpp::Time stamp = sensor_publisher::kernelEventToRosTime(
+            *this->get_clock(), frame_ns, 200000000LL, &from_kernel);
+        if (!from_kernel) {
+            RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
+                "%s: frame time is not on a known clock, using the time of reading",
+                frame_id.c_str());
+        }
+        stamp = rclcpp::Time(
+            stamp.nanoseconds() + static_cast<int64_t>(time_offset_s * 1e9),
+            stamp.get_clock_type());
+
         auto msg = cv_bridge::CvImage(
             std_msgs::msg::Header(), "mono8", gray).toImageMsg();
-        msg->header.stamp    = this->now();
+        msg->header.stamp    = stamp;
         msg->header.frame_id = frame_id;
         pub.publish(*msg);
     }
