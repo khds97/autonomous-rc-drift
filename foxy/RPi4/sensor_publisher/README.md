@@ -93,7 +93,9 @@ The steering is turned with the transmitter wheel (left side of the picture). Th
 
 ### Camera settings
 
-The source defaults to **640 x 480** and **30 FPS** per camera. It requests **MJPEG** from each V4L2 device, decodes frames as grayscale, and publishes `mono8` images. The capture loops are paced by the cameras: each loop waits for the next frame. If the driver does not accept the requested frame rate, the node prints a warning with the rate it accepted, and it prints the measured frame rate of each camera every 5 seconds.
+The source defaults to **640 x 480** and **30 FPS** per camera. It requests **MJPEG** from each V4L2 device, decodes frames as grayscale, and publishes `mono8` images. The capture loops are paced by the cameras: each loop waits for the next frame.
+
+Some cameras ignore the requested frame rate and deliver more (the OV9281 boards can run at 60 or 120 FPS). The `max_fps` parameter limits the published rate by dropping the extra frames before they are decoded, which saves CPU and network bandwidth. Every 5 seconds the node prints the published frame rate and the rate the camera delivers. If the driver does not accept the requested `fps`, a warning shows the rate it accepted. The modes a camera offers can be listed with `v4l2-ctl -d /dev/video0 --list-formats-ext`.
 
 | Parameter | Default | Description |
 |---|---|---|
@@ -101,6 +103,7 @@ The source defaults to **640 x 480** and **30 FPS** per camera. It requests **MJ
 | `rotating_device` | `/dev/video2` | Rotating camera device |
 | `width`, `height` | `640`, `480` | Frame size |
 | `fps` | `30` | Requested frame rate |
+| `max_fps` | `30.0` | Limit of the published frame rate, `0` = no limit |
 | `fixed_time_offset_s` | `0.0` | Constant stamp shift for the fixed camera |
 | `rotating_time_offset_s` | `0.0` | Constant stamp shift for the rotating camera |
 

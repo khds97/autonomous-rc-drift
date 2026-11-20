@@ -15,6 +15,8 @@ def generate_launch_description():
                 'width': 640,
                 'height': 480,
                 'fps': 30,
+                # Published frame rate limit in Hz, 0 = no limit
+                'max_fps': 30.0,
                 # Constant stamp shift in seconds, for a measured camera-to-IMU offset
                 'fixed_time_offset_s': 0.0,
                 'rotating_time_offset_s': 0.0,

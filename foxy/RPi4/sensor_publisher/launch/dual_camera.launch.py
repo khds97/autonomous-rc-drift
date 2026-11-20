@@ -15,6 +15,7 @@ def generate_launch_description():
                 'width': 640,
                 'height': 480,
                 'fps': 30,
+                'max_fps': 30.0,
             }],
         ),
     ])

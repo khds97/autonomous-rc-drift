@@ -40,6 +40,8 @@ struct V4L2Buffer {
     size_t length;
 };
 
+enum class ReadResult { kFrame, kSkipped, kFailed };
+
 class V4L2Camera
 {
 public:
@@ -100,28 +102,41 @@ public:
         return ioctl(fd_, VIDIOC_STREAMON, &type) >= 0;
     }
 
+    // Limits the frame rate to max_fps by dropping the extra frames before they are
+    // decoded. 0 disables the limit.
+    void set_max_fps(double max_fps)
+    {
+        min_interval_ns_ = max_fps > 0.0 ? static_cast<int64_t>(1e9 / max_fps) : 0;
+    }
+
     // Capture MJPG and decode directly as grayscale.
     // frame_ns is the V4L2 buffer time of the frame in nanoseconds (kernel clock),
     // or 0 if the driver gives no time.
-    bool read(cv::Mat& gray, int64_t* frame_ns)
+    // Returns kSkipped when the frame was dropped by the frame rate limit.
+    ReadResult read(cv::Mat& gray, int64_t* frame_ns)
     {
         // Wait for frame (100ms timeout)
         fd_set fds;
         FD_ZERO(&fds);
         FD_SET(fd_, &fds);
         timeval tv{0, 100000};
-        if (select(fd_ + 1, &fds, nullptr, nullptr, &tv) <= 0) return false;
+        if (select(fd_ + 1, &fds, nullptr, nullptr, &tv) <= 0) return ReadResult::kFailed;
 
         v4l2_buffer buf{};
         buf.type   = V4L2_BUF_TYPE_VIDEO_CAPTURE;
         buf.memory = V4L2_MEMORY_MMAP;
-        if (ioctl(fd_, VIDIOC_DQBUF, &buf) < 0) return false;
+        if (ioctl(fd_, VIDIOC_DQBUF, &buf) < 0) return ReadResult::kFailed;
 
         if ((buf.flags & V4L2_BUF_FLAG_TIMESTAMP_MASK) == V4L2_BUF_FLAG_TIMESTAMP_UNKNOWN) {
             *frame_ns = 0;
         } else {
             *frame_ns = static_cast<int64_t>(buf.timestamp.tv_sec) * 1000000000LL +
                         static_cast<int64_t>(buf.timestamp.tv_usec) * 1000LL;
+        }
+
+        if (*frame_ns != 0 && !frame_due(*frame_ns)) {
+            ioctl(fd_, VIDIOC_QBUF, &buf);
+            return ReadResult::kSkipped;
         }
 
         // Decode MJPG directly as grayscale (skip BGR entirely)
@@ -134,7 +149,7 @@ public:
         // Re-queue buffer
         ioctl(fd_, VIDIOC_QBUF, &buf);
 
-        return !gray.empty();
+        return gray.empty() ? ReadResult::kFailed : ReadResult::kFrame;
     }
 
     void close()
@@ -154,8 +169,27 @@ public:
     double actual_fps() const { return actual_fps_; }
 
 private:
+    // Frame rate limiter. A frame is kept when it arrives no earlier than a quarter
+    // period before the next due time, so a camera that delivers exactly max_fps
+    // loses no frames. After a stall the schedule restarts from the current frame.
+    bool frame_due(int64_t frame_ns)
+    {
+        if (min_interval_ns_ <= 0) return true;
+        if (next_due_ns_ == 0 || frame_ns - next_due_ns_ > min_interval_ns_) {
+            next_due_ns_ = frame_ns + min_interval_ns_;
+            return true;
+        }
+        if (frame_ns >= next_due_ns_ - min_interval_ns_ / 4) {
+            next_due_ns_ += min_interval_ns_;
+            return true;
+        }
+        return false;
+    }
+
     int fd_;
     double actual_fps_ = 0.0;
+    int64_t min_interval_ns_ = 0;
+    int64_t next_due_ns_ = 0;
     std::vector<V4L2Buffer> buffers_;
 };
 
@@ -173,6 +207,10 @@ public:
         this->declare_parameter("width",  640);
         this->declare_parameter("height", 480);
         this->declare_parameter("fps",    30);
+        // Frame rate limit for the published images [Hz], 0 = no limit. Some cameras
+        // deliver more than the requested fps; the extra frames are dropped before
+        // decoding.
+        this->declare_parameter("max_fps", 30.0);
         // Constant shift added to each camera's stamps [s]. A positive value moves
         // the stamps later. Use it to correct a measured camera-to-IMU time offset.
         this->declare_parameter("fixed_time_offset_s",    0.0);
@@ -183,6 +221,7 @@ public:
         width_  = this->get_parameter("width").as_int();
         height_ = this->get_parameter("height").as_int();
         fps_    = this->get_parameter("fps").as_int();
+        const double max_fps = this->get_parameter("max_fps").as_double();
         const double fixed_offset_s    = this->get_parameter("fixed_time_offset_s").as_double();
         const double rotating_offset_s = this->get_parameter("rotating_time_offset_s").as_double();
 
@@ -196,8 +235,12 @@ public:
             rclcpp::shutdown(); return;
         }
 
+        fixed_cam_.set_max_fps(max_fps);
+        rotating_cam_.set_max_fps(max_fps);
+
         RCLCPP_INFO(this->get_logger(),
-            "Dual cameras initialized | Resolution: %dx%d | FPS: %d", width_, height_, fps_);
+            "Dual cameras initialized | Resolution: %dx%d | FPS: %d | max published FPS: %.1f",
+            width_, height_, fps_, max_fps);
         warn_if_fps_differs("fixed", fixed_cam_.actual_fps());
         warn_if_fps_differs("rotating", rotating_cam_.actual_fps());
 
@@ -242,27 +285,34 @@ private:
         double time_offset_s)
     {
         auto rate_start = std::chrono::steady_clock::now();
-        int frame_count = 0;
+        int published_count = 0;
+        int captured_count = 0;
 
         while (running_ && rclcpp::ok()) {
             cv::Mat gray;
             int64_t frame_ns = 0;
-            if (cam.read(gray, &frame_ns)) {
+            const ReadResult result = cam.read(gray, &frame_ns);
+            if (result == ReadResult::kFrame) {
                 publish_frame(pub, gray, frame_id, frame_ns, time_offset_s);
-                ++frame_count;
+                ++published_count;
+                ++captured_count;
+            } else if (result == ReadResult::kSkipped) {
+                ++captured_count;
             } else {
                 RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(),
                     2000, "Failed to read %s camera frame", name.c_str());
                 std::this_thread::sleep_for(1ms);
             }
 
-            // Report the achieved frame rate every 5 s
+            // Report the frame rates every 5 s
             const auto now = std::chrono::steady_clock::now();
             const double elapsed = std::chrono::duration<double>(now - rate_start).count();
             if (elapsed >= 5.0) {
-                RCLCPP_INFO(this->get_logger(), "%s camera: %.1f FPS",
-                    name.c_str(), frame_count / elapsed);
-                frame_count = 0;
+                RCLCPP_INFO(this->get_logger(),
+                    "%s camera: %.1f FPS published (%.1f FPS from the camera)",
+                    name.c_str(), published_count / elapsed, captured_count / elapsed);
+                published_count = 0;
+                captured_count = 0;
                 rate_start = now;
             }
         }
