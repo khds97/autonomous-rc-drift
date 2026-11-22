@@ -25,39 +25,7 @@ foxy/
 
 The Foxy system is distributed across three devices. The Raspberry Pi 4 acquires vehicle and perception sensor data, the laptop runs the DAgger-based software and communicates with the RC transmitter interface, and the STM32 controller handles the low-level analog signal interface.
 
-~~~text
-                         ROS 2 network (DDS)
-        ┌────────────────────────────────────────────────────┐
-        │                                                    │
-┌───────▼──────── Raspberry Pi 4 ───────┐      ┌─────────────▼──────── Laptop ─────────────┐
-│                                      │      │                                           │
-│  Vehicle sensor path                 │      │  Existing DAgger software pipeline       │
-│  ┌───────────────────────────────┐   │      │  ┌─────────────────────────────────────┐  │
-│  │ Vehicle sensors               │   │      │  │ sync_sub → preprocess → model       │  │
-│  │ (pigpio / ADS1115, etc.)       │   │      │  │                 ↓                   │  │
-│  └───────────────┬───────────────┘   │      │  │       driftmodel_env / DAgger         │  │
-│                  ▼                   │      │  │                 ↓                   │  │
-│  ┌───────────────────────────────┐   │      │  │          control output              │  │
-│  │ driftmodel sensor node        │   │      │  └─────────────────┬───────────────────┘  │
-│  └───────────────┬───────────────┘   │      │                    │                      │
-│                  │ ROS 2 topics      │      │              USB CDC serial               │
-│                  └───────────────────┼──────┼────────────────────┼──────────────────────┤
-│                                      │      │                    ▼                      │
-│  New camera / IMU acquisition path  │      │  ┌──────────── STM32 controller ─────────┐ │
-│  ┌───────────────────────────────┐   │      │  │ USB CDC ↔ control / telemetry        │ │
-│  │ Fixed camera                  │   │      │  │                                      │ │
-│  │ Rotating camera               │   │      │  │ ADC: transmitter steering/throttle   │ │
-│  │ ISM330DHCX IMU                │   │      │  │ DAC: laptop commands to transmitter │ │
-│  └───────────────┬───────────────┘   │      │  │ GPIO: manual / laptop mode selection │ │
-│                  ▼                   │      │  └──────────────────┬───────────────────┘ │
-│  ┌───────────────────────────────┐   │      │                     │                     │
-│  │ sensor_publisher              │   │      │                     ▼                     │
-│  │ camera + raw IMU publishers    │   │      │            RC transmitter interface       │
-│  └───────────────┬───────────────┘   │      │                                             │
-│                  │ ROS 2 topics      │      └─────────────────────────────────────────────┘
-│                  └───────────────────┼──────► rosbag recording / offline analysis
-└──────────────────────────────────────┘
-~~~
+![ROS 2 Foxy system architecture](assets/system-architecture.svg)
 
 The diagram shows two separate sensor paths on the Raspberry Pi:
 
