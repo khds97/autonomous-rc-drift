@@ -1,6 +1,6 @@
 # Sensor Publisher (Raspberry Pi 4 / ROS 2 Foxy)
 
-This package publishes the two USB cameras and the ISM330DHCX IMU from the Raspberry Pi 4. Both publishers stamp their data with the time it was captured, on the same clock, so camera frames and IMU samples can be lined up later. It is kept separate from the `driftmodel` vehicle sensor package.
+This package publishes the two USB cameras and the ISM330DHCX IMU from the Raspberry Pi 4. The publishers use capture-related timestamps where the drivers provide them: V4L2 buffer timestamps for camera frames and the kernel GPIO data-ready event timestamp for IMU samples. The timestamps are converted to the Raspberry Pi node clock when the kernel clock source can be identified. This provides a common time base for offline comparison, but does not by itself establish physical sensor synchronization. It is kept separate from the `driftmodel` vehicle sensor package.
 
 ## Nodes
 
@@ -61,16 +61,16 @@ ros2 topic hz /camera/fixed/image_raw
 
 ## Timestamps
 
-Camera frames and IMU samples are stamped with the time the data was captured, not the time it was published, and both are converted to the node clock (the system clock) of the Pi.
+The message header uses a capture-related timestamp rather than the time the ROS message is published.
 
-- **IMU:** the time of the INT1 edge reported by the kernel.
-- **Cameras:** the V4L2 buffer time of the frame, i.e. when the frame arrived over USB, before the JPEG decode.
+- **IMU:** the kernel timestamp of the GPIO 23 INT1 rising-edge event. This is the data-ready event time; it is not guaranteed to be the exact internal sampling instant or the midpoint of the sensor's measurement interval.
+- **Cameras:** the V4L2 buffer timestamp associated with the frame, before JPEG decode. It represents the driver's frame timestamp and should not be interpreted as a measured exposure midpoint.
 
 Kernel event times are on `CLOCK_REALTIME` or `CLOCK_MONOTONIC` depending on the driver. The nodes check which one gives a plausible age (up to 50 ms for the IMU, 200 ms for the cameras) and use it. If neither fits, the node falls back to the time of reading and prints a warning; the warning means the stamps of that stream are late and jittery.
 
 The V4L2 time is the start of the frame, not the middle of the exposure, and the USB transfer adds a small delay. A constant shift can be applied with the `fixed_time_offset_s` and `rotating_time_offset_s` parameters once the camera-to-IMU offset has been measured (positive values move the stamps later). The offset itself is not measured by this package.
 
-To compare stamps from different computers, their clocks have to be synchronized (for example with chrony). Stamps from the same Pi are on one clock already.
+When both timestamp paths are successfully mapped, stamps are expressed in the Raspberry Pi node clock. A fallback warning means that stream's timestamp was replaced with the read time and should not be treated as an equivalent capture timestamp. To compare stamps from different computers, their clocks must also be synchronized (for example with chrony).
 
 ## Cameras
 
@@ -130,11 +130,11 @@ The sensor raises a short pulse on INT1 for every new sample. The node blocks on
 - Gyroscope: 208 Hz, +/-1000 dps
 - Block data update and register address auto-increment enabled
 - The sensor is software-reset at startup
-- Gyroscope data-ready is routed to INT1 as a short pulse (one rising edge per sample). The accelerometer runs at the same output rate, so both are read after each edge.
+- Gyroscope data-ready is routed to INT1. The node waits for rising-edge events on GPIO 23; on each handled event it reads the gyro and accelerometer output registers. The accelerometer is configured to the same output data rate.
 
 If you change the output rate or the full-scale ranges, update the sensitivity constants in `src/imu_node.cpp` as well.
 
-The frame ID is `imu_link`. Orientation is not estimated (`orientation_covariance[0] = -1`). The node logs the publish rate and the number of missed samples every 5 seconds; with the IMU lying still it should be close to 208 Hz, the gyroscope values close to zero and the acceleration magnitude close to 9.8 m/s^2.
+The frame ID is `imu_link`. Orientation is not estimated (`orientation_covariance[0] = -1`). The node logs the publish rate and the number of missed edge events every 5 seconds. The configured output data rate is 208 Hz, but the observed publish rate should be measured from node logs or message header timestamps rather than assumed to equal the configured ODR. With the IMU lying still, gyroscope values should be near zero and the acceleration magnitude near 9.8 m/s^2.
 
 | Parameter | Default | Description |
 |---|---|---|
