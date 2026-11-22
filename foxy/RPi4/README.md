@@ -166,5 +166,6 @@ The vehicle sensor packages are `driftmodel_msg` and `driftmodel`. Refer to thei
 
 - Run the build and hardware checks on the Raspberry Pi after installing the dependencies.
 - Camera and IMU topics are published independently. Their timestamps are converted to the Raspberry Pi ROS clock, but that alone does not prove physical camera-exposure and IMU-sampling alignment.
+- In the tested 640 x 480 MJPG mode, both OV9281 cameras accepted 120 FPS although 30 FPS was requested; the publisher limits image publication to 30 FPS. See the sensor_publisher README for the available V4L2 modes and USB bandwidth considerations.
 - The IMU publishes raw accelerometer and gyroscope values. It does not estimate orientation or apply bias calibration or a vehicle-frame axis transform.
 - The IMU is configured for 208 Hz output. This is the configured ODR, not a measured ROS publication rate; compare bag header timestamps and node rate logs when validating actual behavior.
