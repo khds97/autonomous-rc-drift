@@ -72,28 +72,21 @@ The V4L2 time is the start of the frame, not the middle of the exposure, and the
 
 When both timestamp paths are successfully mapped, stamps are expressed in the Raspberry Pi node clock. In the camera publisher, an invalid or unmappable kernel timestamp produces a warning and the frame is dropped; it is not published with a read-time replacement. To compare stamps from different computers, their clocks must also be synchronized (for example with chrony).
 
-### Recorded timestamp check
+### Chrony-synchronized subscriber-side capture
 
-A ROS 2 bag playback export contained 11,057 header timestamps for each camera and 81,142 for the IMU. The bag metadata reported 81,224 IMU messages, so the CSV export missed 82 IMU messages; camera counts matched the bag metadata.
+The current timing analysis is based on the 201.17-second subscriber-side capture `sensor_sync.csv`, recorded after chrony synchronization between the Raspberry Pi and laptop had been confirmed. The CSV contains 6,036 fixed-camera rows, 6,036 rotating-camera rows, and 44,372 IMU rows.
 
-| Stream | Mean header-stamp interval | Median interval | Observed rate |
-|---|---:|---:|---:|
-| Fixed camera | 33.337 ms | 32.015 ms | 29.996 Hz |
-| Rotating camera | 33.333 ms | 32.022 ms | 30.000 Hz |
-| IMU | 4.547 ms | 4.521 ms | 219.928 Hz |
+| Stream | Mean header-stamp interval | Median interval | Observed rate | Mean estimated delay | Median estimated delay |
+|---|---:|---:|---:|---:|---:|
+| Fixed camera | 33.334 ms | 32.017 ms | 30.00 Hz | 24.58 ms | 24.77 ms |
+| Rotating camera | 33.332 ms | 32.023 ms | 30.00 Hz | 26.35 ms | 25.64 ms |
+| IMU | 4.533 ms | 4.521 ms | 220.59 Hz | 7.32 ms | 5.37 ms |
 
-The extracted header-stamp sequences were strictly increasing, with no duplicate or negative intervals. For each camera frame, the nearest IMU header timestamp was on average 1.14 ms away (fixed camera: 1.144 ms; rotating camera: 1.147 ms; 95th percentile approximately 2.16 ms). This describes timestamp proximity to the nearest discrete IMU sample; it is **not** a calibrated camera-to-IMU offset or a physical synchronization-error measurement. Exposure timing and the IMU's internal sampling instant are not available from these message timestamps alone.
+The rotating-minus-fixed same-index header timestamp difference had a median of 6.98 ms (5th–95th percentile: 3.01–11.06 ms; maximum absolute difference: 15.10 ms). Nearest-IMU-sample distance medians were 1.127 ms for fixed and 1.131 ms for rotating (95th percentiles: 2.148 ms and 2.154 ms). These are timestamp comparison and sample-proximity statistics, not calibrated sensor offsets or physical synchronization errors. The two camera capture threads are independent and are not hardware-trigger synchronized.
 
-A same-index comparison of the two camera header-stamp sequences found that the rotating-camera timestamp was later than the fixed-camera timestamp by a median of 9.167 ms (5th percentile: 1.161 ms; 95th percentile: 13.162 ms; maximum: 93.193 ms). This is a sequence-index timestamp difference, not a hardware synchronization measurement or a calibrated exposure-time offset.
+The `estimated_delay_ms` column is calculated from subscriber `receive_wall_time - header_stamp`. Because this capture was recorded after chrony synchronization was confirmed, the two system clocks had a synchronized reference; however, the value still includes the complete delay from the stamped event to subscriber receipt, including processing and transport. It is not network-only latency. The `receive_monotonic` column is measured in seconds on the subscriber computer's monotonic clock and must not be directly subtracted from epoch-based `header_stamp` values.
 
-The IMU's configured output data rate remains 208 Hz. The approximately 220 Hz result is the observed rate of extracted header timestamps and should not be treated as proof that the physical sensor samples at 220 Hz. See the [Foxy project README](../../README.md#sensor-acquisition-and-timestamp-validation) for the complete recording statistics and limitations.
-
-
-### Separate subscriber-side capture CSV
-
-A separate subscriber-side capture in `sensor_sync.csv` covers approximately 201.17 seconds (6,036 fixed-camera rows, 6,036 rotating-camera rows, and 44,372 IMU rows). It is distinct from the 369.315-second ROS bag export summarized above. Mean header-stamp intervals were 33.334 ms (fixed), 33.332 ms (rotating), and 4.533 ms (IMU). The same-index rotating-minus-fixed camera timestamp difference had a median of 6.98 ms (5th–95th percentile: 3.01–11.06 ms). Nearest-IMU-sample distance medians were 1.127 ms (fixed) and 1.131 ms (rotating). These are timestamp comparison statistics, not calibrated physical synchronization errors.
-
-In this CSV, `receive_monotonic` is measured in seconds on the subscriber computer's monotonic clock. `estimated_delay_ms` is calculated from `receive_wall_time - header_stamp`; it is not network-only latency and can include clock offset and processing/transport delay.
+The IMU's configured output data rate is 208 Hz. The approximately 220.59 Hz value is the observed rate of extracted header timestamps and should not be treated as proof that the physical sensor samples at that rate. The earlier pre-chrony ROS 2 bag export is excluded from this current timing analysis.
 
 
 ## Cameras
