@@ -95,8 +95,23 @@ A separate same-index comparison of the two camera header-stamp sequences found 
 
 The IMU is configured for 208 Hz; the approximately 220 Hz figure above is the observed rate of extracted IMU header timestamps, not the configured sensor ODR. The difference should be investigated before treating the observed event rate as the physical sampling rate.
 
-**Still not measured:** a calibrated camera-to-IMU constant offset, physical exposure-to-sampling timing error, and long-term clock drift. The CSV also contains `receive_monotonic_ns` values from the playback subscriber. Those are useful for analyzing message arrival intervals on that computer, but they use a monotonic clock and must not be directly subtracted from the Pi's epoch-based `header.stamp` values.
+**Still not measured:** a calibrated camera-to-IMU constant offset, physical exposure-to-sampling timing error, and long-term clock drift. A separate subscriber-side capture, `sensor_sync.csv`, covers approximately 201.17 seconds and is a different dataset from this 369.315-second bag export. Its columns are `header_stamp`, `receive_wall_time`, `receive_monotonic`, `receive_interval_ms`, and `estimated_delay_ms`. `receive_monotonic` is expressed in seconds on the subscriber computer's monotonic clock; it must not be directly subtracted from the epoch-based `header_stamp`. `estimated_delay_ms` is the wall-clock difference between `receive_wall_time` and `header_stamp`; it is a header-to-receive delay estimate, not pure network latency, and depends on the clocks being aligned.
 
+
+
+### Separate subscriber-side capture: `sensor_sync.csv`
+
+A separate 201.17-second subscriber-side capture was analyzed from `sensor_sync.csv`. It contains 6,036 fixed-camera, 6,036 rotating-camera, and 44,372 IMU rows. This file is not the 369.315-second ROS bag export described above.
+
+| Stream | Mean header-stamp interval | Observed rate | Mean estimated delay | Median estimated delay |
+|---|---:|---:|---:|---:|
+| Fixed camera | 33.334 ms | 30.00 Hz | 24.58 ms | 24.77 ms |
+| Rotating camera | 33.332 ms | 30.00 Hz | 26.35 ms | 25.64 ms |
+| IMU | 4.533 ms | 220.59 Hz | 7.32 ms | 5.37 ms |
+
+In a same-index comparison, the rotating-camera header timestamp was later than the fixed-camera timestamp by a median of 6.98 ms (5th percentile: 3.01 ms; 95th percentile: 11.06 ms; maximum absolute difference: 15.10 ms). The nearest-IMU-sample distance had a median of 1.127 ms for fixed and 1.131 ms for rotating; the 95th percentiles were 2.148 ms and 2.154 ms, respectively. These are timestamp comparison and sample-proximity statistics, not calibrated sensor offsets or physical synchronization errors.
+
+The `estimated_delay_ms` column is computed from subscriber `receive_wall_time` minus message `header_stamp`. It includes all delay between the stamped event and subscriber receipt, as well as any clock offset; it must not be described as network-only latency without separate clock and pipeline validation. The `receive_monotonic` column is in seconds on the subscriber computer's monotonic clock and is not directly comparable to epoch-based `header_stamp` values.
 
 ## Device-specific setup
 
