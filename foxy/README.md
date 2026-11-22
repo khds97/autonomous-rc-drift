@@ -39,10 +39,16 @@ Differences from the Noetic layout:
 
 The Raspberry Pi 4 `sensor_publisher` package combines the two V4L2 camera publishers and the ISM330DHCX IMU publisher.
 
-- **Cameras:** two independent USB camera streams are captured through V4L2, decoded as grayscale `mono8`, and published at a configured maximum rate. The V4L2 buffer timestamp is converted to the node's ROS clock before publication.
+- **Cameras:** two independent USB camera streams are captured through V4L2, decoded as grayscale `mono8`, and published at a configured maximum rate. The V4L2 buffer timestamp is converted to the node's ROS clock before publication. In the tested 640 x 480 MJPG mode, both cameras accepted 120 FPS while the ROS publisher was limited to 30 FPS; invalid/unmappable camera timestamps are dropped rather than replaced with read-time stamps.
 - **IMU:** the ISM330DHCX is configured for 208 Hz accelerometer and gyroscope output. Its gyro data-ready signal is routed to INT1; the Raspberry Pi detects the GPIO 23 rising edge through libgpiod, reads the sensor over I2C, converts the kernel event timestamp to ROS time, and publishes `sensor_msgs/Imu` on `/imu/data_raw`.
-- **Clock handling:** the camera and IMU timestamp paths convert kernel timestamps to the same Raspberry Pi ROS clock when the kernel clock source can be identified. If the timestamp cannot be mapped reliably, the publisher falls back to the read time and emits a warning. Such fallback messages should be treated as having additional timing uncertainty.
+- **Clock handling:** the camera and IMU timestamp paths convert kernel timestamps to the same Raspberry Pi ROS clock when the kernel clock source can be identified. For camera frames, an invalid or implausibly old V4L2 timestamp causes the frame to be dropped with a warning; the camera publisher does not substitute the read time. A common ROS clock enables timestamp comparison but does not establish physical sensor synchronization.
 - **Scope:** this timestamp strategy enables offline comparison of message timestamps. It does not establish hardware synchronization between the two cameras, nor does it prove the physical camera exposure midpoint is aligned with the IMU sampling instant.
+
+### Camera capture mode and USB bandwidth
+
+The two OV9281 camera devices tested on the Raspberry Pi 4 reported MJPG 1280 x 720 at 120/60/30/25 FPS, MJPG 640 x 480 at 120 FPS, and YUYV 640 x 480 at 30 FPS. In the current 640 x 480 MJPG configuration, both drivers accepted 120 FPS although 30 FPS was requested; `max_fps=30` limits the ROS image publication rate to approximately 30 FPS by dropping extra captured frames before JPEG decoding.
+
+YUYV 640 x 480 at 30 FPS requires approximately 18.4 MB/s per camera (36.9 MB/s for two cameras, about 295 Mbps before USB overhead). Because USB camera streams can share an upstream bus, the current MJPG configuration is retained rather than switching both cameras to YUYV without sustained bandwidth testing. MJPEG transfer bandwidth is content- and compression-dependent.
 
 ### ROS bag capture
 
