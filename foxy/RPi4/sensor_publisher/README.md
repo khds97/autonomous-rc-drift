@@ -72,6 +72,21 @@ The V4L2 time is the start of the frame, not the middle of the exposure, and the
 
 When both timestamp paths are successfully mapped, stamps are expressed in the Raspberry Pi node clock. A fallback warning means that stream's timestamp was replaced with the read time and should not be treated as an equivalent capture timestamp. To compare stamps from different computers, their clocks must also be synchronized (for example with chrony).
 
+### Recorded timestamp check
+
+A ROS 2 bag playback export contained 11,057 header timestamps for each camera and 81,142 for the IMU. The bag metadata reported 81,224 IMU messages, so the CSV export missed 82 IMU messages; camera counts matched the bag metadata.
+
+| Stream | Mean header-stamp interval | Median interval | Observed rate |
+|---|---:|---:|---:|
+| Fixed camera | 33.337 ms | 32.015 ms | 29.996 Hz |
+| Rotating camera | 33.333 ms | 32.022 ms | 30.000 Hz |
+| IMU | 4.547 ms | 4.521 ms | 219.928 Hz |
+
+The extracted header-stamp sequences were strictly increasing, with no duplicate or negative intervals. For each camera frame, the nearest IMU header timestamp was on average 1.14 ms away (95th percentile approximately 2.16 ms). This describes timestamp proximity to the nearest discrete IMU sample; it is **not** a calibrated camera-to-IMU offset or a physical synchronization-error measurement. Exposure timing and the IMU's internal sampling instant are not available from these message timestamps alone.
+
+The IMU's configured output data rate remains 208 Hz. The approximately 220 Hz result is the observed rate of extracted header timestamps and should not be treated as proof that the physical sensor samples at 220 Hz. See the [Foxy project README](../../README.md#sensor-acquisition-and-timestamp-validation) for the complete recording statistics and limitations.
+
+
 ## Cameras
 
 ### Camera arrangement
