@@ -130,7 +130,7 @@ Every 5 seconds the node prints the published frame rate and the camera capture 
 
 <img src="images/dual_camera_demo.gif" alt="Both camera streams in rqt">
 
-The two streams (`/camera/rotating/image_raw` on the left, `/camera/fixed/image_raw` on the right) are viewed in `rqt` while `htop` runs next to it to show the CPU load of the publisher.
+The two streams (`/camera/rotating/image_raw/compressed` on the left, `/camera/fixed/image_raw/compressed` on the right) are viewed in `rqt` while `htop` runs next to it to show the CPU load of the publisher.
 
 ## IMU
 
