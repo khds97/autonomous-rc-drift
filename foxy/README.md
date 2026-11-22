@@ -4,7 +4,7 @@ ROS 2 Foxy version of the 1/10-scale autonomous RC drift car. The architecture i
 
 The Noetic implementation is on the `noetic` branch.
 
-**Status:** The merged `sensor_publisher` package has been built and run on the Raspberry Pi 4. The two camera streams and `/imu/data_raw` were recorded together in a ROS 2 bag after correcting the recording QoS. The bag confirms that messages from all three topics were received over a roughly 369-second run. Timestamp statistics have been collected, but the camera-to-IMU timestamp offset and synchronization error have not yet been quantitatively evaluated. The complete vehicle system has not yet been tested as an integrated setup.
+**Status:** The merged `sensor_publisher` package has been built and run on the Raspberry Pi 4. The two camera streams and `/imu/data_raw` were recorded together in a ROS 2 bag after correcting the recording QoS. The bag confirms that messages from all three topics were received over a roughly 369-second run. A same-index comparison of the two camera header-stamp sequences shows the rotating-camera timestamps are later than the fixed-camera timestamps by a median of 9.167 ms. This is a timestamp difference, not evidence of hardware synchronization. A calibrated camera-to-IMU offset and physical synchronization error have not yet been established. The complete vehicle system has not yet been tested as an integrated setup.
 
 ## Layout
 
@@ -79,6 +79,8 @@ Additional interval statistics:
 | IMU | 4.516 ms | 4.541 ms | 1.301 ms | 18.083 ms |
 
 For each camera frame, the nearest IMU header timestamp was also identified. The mean absolute nearest-sample difference was 1.144 ms for the fixed camera and 1.147 ms for the rotating camera; the 95th percentile was approximately 2.16 ms for both. This is a nearest-sample proximity statistic, not a measured camera-to-IMU synchronization error or a calibrated time offset. It is bounded in part by the spacing of the IMU samples and does not account for camera exposure timing or the IMU's internal measurement timing.
+
+A separate same-index comparison of the two camera header-stamp sequences found that the rotating-camera timestamp was later than the fixed-camera timestamp by a median of 9.167 ms (5th percentile: 1.161 ms; 95th percentile: 13.162 ms; maximum: 93.193 ms). This describes the difference between corresponding sequence indices only; the two independent camera threads are not hardware-trigger synchronized, so it must not be interpreted as a calibrated exposure-time offset.
 
 The IMU is configured for 208 Hz; the approximately 220 Hz figure above is the observed rate of extracted IMU header timestamps, not the configured sensor ODR. The difference should be investigated before treating the observed event rate as the physical sampling rate.
 
