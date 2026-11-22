@@ -4,7 +4,7 @@ ROS 2 Foxy version of the 1/10-scale autonomous RC drift car. The architecture i
 
 The Noetic implementation is on the `noetic` branch.
 
-**Status:** The Raspberry Pi 4 camera and IMU publishers were built with `colcon` and verified on the Pi as separate packages. They have since been merged into `sensor_publisher`, which has not been rebuilt or verified on the Pi yet. The other Foxy components have PC-level unit and runtime tests as described below; the complete vehicle system has not yet been tested as an integrated setup.
+**Status:** The merged `sensor_publisher` package has been built and run on the Raspberry Pi 4. The two camera streams and `/imu/data_raw` were recorded together in a ROS 2 bag after correcting the recording QoS. The bag confirms that messages from all three topics were received over a roughly 369-second run. Timestamp statistics have been collected, but the camera-to-IMU timestamp offset and synchronization error have not yet been quantitatively evaluated. The complete vehicle system has not yet been tested as an integrated setup.
 
 ## Layout
 
@@ -30,9 +30,45 @@ Differences from the Noetic layout:
 - `msg/` and `srv/` are at the package root and the names are CamelCase (required by ROS 2).
 - The laptop-side USB module is Python (`usb_receiver.py`) instead of C++, so there is no `include/` on the laptop.
 - Launch files are Python (`launch/*.py`). `demo.rviz` is a minimal rviz2 config (grid and odometry).
-- A separate `sensor_publisher` package under `RPi4/` publishes two grayscale image topics (fixed and steering-linked rotating cameras) and the accelerometer and gyroscope measurements of the Adafruit ISM330DHCX, all stamped with their capture time.
-- OpenVINS/VINS integration is not currently included. The camera package does not publish camera calibration data, and the two camera streams are not hardware-synchronized.
+- A separate `sensor_publisher` package under `RPi4/` publishes two grayscale camera image topics and raw accelerometer/gyroscope measurements from the ISM330DHCX. Camera V4L2 buffer timestamps and IMU GPIO data-ready event timestamps are converted to the Raspberry Pi ROS clock before publication.
+- The two camera capture threads are independent and are not hardware-trigger synchronized. A common ROS clock makes timestamp comparison possible, but does not by itself prove that the physical exposure and IMU sampling instants are aligned. The camera-to-IMU offset is still under evaluation.
+- OpenVINS/VINS integration is not currently included, and camera calibration messages are not published.
 - The recorded data and trained models were not carried over.
+
+## Sensor acquisition and timestamp validation
+
+The Raspberry Pi 4 `sensor_publisher` package combines the two V4L2 camera publishers and the ISM330DHCX IMU publisher.
+
+- **Cameras:** two independent USB camera streams are captured through V4L2, decoded as grayscale `mono8`, and published at a configured maximum rate. The V4L2 buffer timestamp is converted to the node's ROS clock before publication.
+- **IMU:** the ISM330DHCX is configured for 208 Hz accelerometer and gyroscope output. Its gyro data-ready signal is routed to INT1; the Raspberry Pi detects the GPIO 23 rising edge through libgpiod, reads the sensor over I2C, converts the kernel event timestamp to ROS time, and publishes `sensor_msgs/Imu` on `/imu/data_raw`.
+- **Clock handling:** the camera and IMU timestamp paths convert kernel timestamps to the same Raspberry Pi ROS clock when the kernel clock source can be identified. If the timestamp cannot be mapped reliably, the publisher falls back to the read time and emits a warning. Such fallback messages should be treated as having additional timing uncertainty.
+- **Scope:** this timestamp strategy enables offline comparison of message timestamps. It does not establish hardware synchronization between the two cameras, nor does it prove the physical camera exposure midpoint is aligned with the IMU sampling instant.
+
+### ROS bag capture
+
+A QoS-adjusted recording test captured the following messages in a bag of approximately 369.315 seconds:
+
+| Topic | Messages | Approximate observed rate |
+|---|---:|---:|
+| `/camera/fixed/image_raw/compressed` | 11,057 | 30 Hz |
+| `/camera/rotating/image_raw/compressed` | 11,057 | 30 Hz |
+| `/imu/data_raw` | 81,224 | 220 Hz |
+
+For the fixed camera, the measured header-timestamp interval statistics were:
+
+| Metric | Result |
+|---|---:|
+| Mean interval | 33.337 ms |
+| Median interval | 32.015 ms |
+| Minimum interval | 2.826 ms |
+| Maximum interval | 80.080 ms |
+| Negative intervals | 0 |
+| Duplicate intervals | 0 |
+
+The IMU is configured for 208 Hz; the approximately 220 Hz figure above is the observed message rate in this recording, not the configured sensor ODR. The difference should be investigated before treating the observed rate as the physical sampling rate.
+
+**Not yet measured:** per-frame camera-to-IMU timestamp offset, signed offset distribution, absolute-error percentiles, and long-term drift. These will be added after extracting and comparing the message `header.stamp` values from the bag. Bag receive timestamps are useful for transport/recording analysis, but are not a substitute for sensor header timestamps when evaluating timestamp alignment.
+
 
 ## Device-specific setup
 
@@ -203,7 +239,7 @@ I reviewed the Noetic code together with its recorded dataset (12,401 samples, 4
 
 | Part | Status |
 |---|---|
-| Raspberry Pi 4: `sensor_publisher` | Merged from the former `camera_publisher` and `imu_publisher`. The former packages were built on the Pi and verified publishing both camera topics and `/imu/data_raw`; the merged package, the capture-time stamps and the libgpiod IMU node have not been built or run on the Pi yet |
+| Raspberry Pi 4: `sensor_publisher` | Merged package built and launched on the Pi. Both camera topics and `/imu/data_raw` were recorded together in a ROS 2 bag; message counts and camera timestamp-interval statistics are documented above. Quantitative camera-to-IMU offset analysis is still pending |
 | Wheel speed and motor hall decoding (`wheelSpeed.hpp`) | Unit tests on a PC with synthetic pulses: 600-3000 rpm, tick wrap, timeout, late pulse, 4 wheels at different speeds, zero on stop |
 | `driver`, `pwm`, `ADS1115`, `I2Cdev` | Compiled with `-Wall -Wextra`. `driver` was linked and run against a stub pigpio |
 | Preprocessing, training, DAgger loop, USB parser, environment | Python tests with a fake serial port, a fake environment and stubbed ROS modules. Training was run on the old Noetic data converted to the new format |
