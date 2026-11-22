@@ -46,28 +46,37 @@ The Raspberry Pi 4 `sensor_publisher` package combines the two V4L2 camera publi
 
 ### ROS bag capture
 
-A QoS-adjusted recording test captured the following messages in a bag of approximately 369.315 seconds:
+A QoS-adjusted recording test produced a ROS 2 bag of approximately 369.315 seconds. The bag metadata reported these message counts:
 
-| Topic | Messages | Approximate observed rate |
+| Topic | Bag messages | Approximate observed rate |
 |---|---:|---:|
 | `/camera/fixed/image_raw/compressed` | 11,057 | 30 Hz |
 | `/camera/rotating/image_raw/compressed` | 11,057 | 30 Hz |
 | `/imu/data_raw` | 81,224 | 220 Hz |
 
-For the fixed camera, the measured header-timestamp interval statistics were:
+A separate timestamp extraction from bag playback produced the following header-stamp counts. The extracted IMU count was 81,142, which is 82 fewer than the bag metadata count; the camera counts matched. The extraction should therefore not be treated as a complete one-to-one export of every IMU bag message.
 
-| Metric | Result |
-|---|---:|
-| Mean interval | 33.337 ms |
-| Median interval | 32.015 ms |
-| Minimum interval | 2.826 ms |
-| Maximum interval | 80.080 ms |
-| Negative intervals | 0 |
-| Duplicate intervals | 0 |
+| Topic | Extracted header stamps | Mean interval | Median interval | Observed rate |
+|---|---:|---:|---:|---:|
+| `/camera/fixed/image_raw/compressed` | 11,057 | 33.337 ms | 32.015 ms | 29.996 Hz |
+| `/camera/rotating/image_raw/compressed` | 11,057 | 33.333 ms | 32.022 ms | 30.000 Hz |
+| `/imu/data_raw` | 81,142 | 4.547 ms | 4.521 ms | 219.928 Hz |
 
-The IMU is configured for 208 Hz; the approximately 220 Hz figure above is the observed message rate in this recording, not the configured sensor ODR. The difference should be investigated before treating the observed rate as the physical sampling rate.
+All three extracted header-stamp sequences were strictly increasing, with no duplicate or negative intervals.
 
-**Not yet measured:** per-frame camera-to-IMU timestamp offset, signed offset distribution, absolute-error percentiles, and long-term drift. These will be added after extracting and comparing the message `header.stamp` values from the bag. Bag receive timestamps are useful for transport/recording analysis, but are not a substitute for sensor header timestamps when evaluating timestamp alignment.
+Additional interval statistics:
+
+| Topic | 5th percentile | 95th percentile | Minimum | Maximum |
+|---|---:|---:|---:|---:|
+| Fixed camera | — | 40.023 ms | 2.826 ms | 80.080 ms |
+| Rotating camera | — | 40.035 ms | 7.931 ms | 67.977 ms |
+| IMU | 4.516 ms | 4.541 ms | 1.301 ms | 18.083 ms |
+
+For each camera frame, the nearest IMU header timestamp was also identified. The mean absolute nearest-sample difference was 1.144 ms for the fixed camera and 1.147 ms for the rotating camera; the 95th percentile was approximately 2.16 ms for both. This is a nearest-sample proximity statistic, not a measured camera-to-IMU synchronization error or a calibrated time offset. It is bounded in part by the spacing of the IMU samples and does not account for camera exposure timing or the IMU's internal measurement timing.
+
+The IMU is configured for 208 Hz; the approximately 220 Hz figure above is the observed rate of extracted IMU header timestamps, not the configured sensor ODR. The difference should be investigated before treating the observed event rate as the physical sampling rate.
+
+**Still not measured:** a calibrated camera-to-IMU constant offset, physical exposure-to-sampling timing error, and long-term clock drift. The CSV also contains `receive_monotonic_ns` values from the playback subscriber. Those are useful for analyzing message arrival intervals on that computer, but they use a monotonic clock and must not be directly subtracted from the Pi's epoch-based `header.stamp` values.
 
 
 ## Device-specific setup
