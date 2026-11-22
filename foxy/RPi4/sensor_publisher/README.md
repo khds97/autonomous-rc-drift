@@ -89,6 +89,13 @@ A same-index comparison of the two camera header-stamp sequences found that the 
 The IMU's configured output data rate remains 208 Hz. The approximately 220 Hz result is the observed rate of extracted header timestamps and should not be treated as proof that the physical sensor samples at 220 Hz. See the [Foxy project README](../../README.md#sensor-acquisition-and-timestamp-validation) for the complete recording statistics and limitations.
 
 
+### Separate subscriber-side capture CSV
+
+A separate subscriber-side capture in `sensor_sync.csv` covers approximately 201.17 seconds (6,036 fixed-camera rows, 6,036 rotating-camera rows, and 44,372 IMU rows). It is distinct from the 369.315-second ROS bag export summarized above. Mean header-stamp intervals were 33.334 ms (fixed), 33.332 ms (rotating), and 4.533 ms (IMU). The same-index rotating-minus-fixed camera timestamp difference had a median of 6.98 ms (5th–95th percentile: 3.01–11.06 ms). Nearest-IMU-sample distance medians were 1.127 ms (fixed) and 1.131 ms (rotating). These are timestamp comparison statistics, not calibrated physical synchronization errors.
+
+In this CSV, `receive_monotonic` is measured in seconds on the subscriber computer's monotonic clock. `estimated_delay_ms` is calculated from `receive_wall_time - header_stamp`; it is not network-only latency and can include clock offset and processing/transport delay.
+
+
 ## Cameras
 
 ### Camera arrangement
