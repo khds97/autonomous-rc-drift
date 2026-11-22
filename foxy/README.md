@@ -6,24 +6,67 @@ The Noetic implementation is on the `noetic` branch.
 
 **Status:** The merged `sensor_publisher` package has been built and run on the Raspberry Pi 4. The two camera streams and `/imu/data_raw` were recorded together in a ROS 2 bag after correcting the recording QoS. The bag confirms that messages from all three topics were received over a roughly 369-second run. A same-index comparison of the two camera header-stamp sequences shows the rotating-camera timestamps are later than the fixed-camera timestamps by a median of 9.167 ms. This is a timestamp difference, not evidence of hardware synchronization. A calibrated camera-to-IMU offset and physical synchronization error have not yet been established. The complete vehicle system has not yet been tested as an integrated setup.
 
-## Layout
+## Repository layout
 
-```
+~~~text
 foxy/
 ├── controller/             STM32F401CCU6 firmware (USB CDC, ADC, I2C, MCP4725 DAC)
 ├── RPi4/
 │   ├── driftmodel_msg/     msg/Sensors.msg
-│   ├── driftmodel/         sensor node (C++, pigpio, ADS1115), launch/
-│   └── sensor_publisher/   dual USB camera publisher (V4L2, OpenCV) and ISM330DHCX IMU publisher, launch/
+│   ├── driftmodel/         vehicle sensor node (C++, pigpio, ADS1115), launch/
+│   └── sensor_publisher/   fixed/rotating camera and ISM330DHCX IMU publishers, launch/
 └── laptop/
     ├── driftmodel_msg/     msg/{Sensors,CtrlVal,PoseFlag}.msg, srv/Flag.srv
     └── driftmodel/         preprocess, model, usb_receiver, driftmodel_env,
                             train_agent, dagger, pose_flag, sync_sub; launch/, demo.rviz
-```
+~~~
 
-The `controller/` directory contains the STM32F401CCU6 firmware used for the RC transmitter interface. This is the controller firmware carried over from the Noetic setup; the ROS 2 port mainly changes the Raspberry Pi and laptop software. The controller communicates with the laptop through USB CDC, reads the transmitter's steering and throttle signals through ADC, and uses two MCP4725 DACs to output analog steering and throttle signals. GPIO inputs select between manual transmitter control and laptop commands.
+## System architecture
 
-The STM32 project includes its CubeMX configuration, application source, HAL/CMSIS drivers, USB CDC middleware, and the MCP4725 driver. IDE workspace metadata and compiled Debug output are excluded.
+The Foxy system is distributed across three devices. The Raspberry Pi 4 acquires vehicle and perception sensor data, the laptop runs the DAgger-based software and communicates with the RC transmitter interface, and the STM32 controller handles the low-level analog signal interface.
+
+~~~text
+                         ROS 2 network (DDS)
+        ┌────────────────────────────────────────────────────┐
+        │                                                    │
+┌───────▼──────── Raspberry Pi 4 ───────┐      ┌─────────────▼──────── Laptop ─────────────┐
+│                                      │      │                                           │
+│  Vehicle sensor path                 │      │  Existing DAgger software pipeline       │
+│  ┌───────────────────────────────┐   │      │  ┌─────────────────────────────────────┐  │
+│  │ Vehicle sensors               │   │      │  │ sync_sub → preprocess → model       │  │
+│  │ (pigpio / ADS1115, etc.)       │   │      │  │                 ↓                   │  │
+│  └───────────────┬───────────────┘   │      │  │       driftmodel_env / DAgger         │  │
+│                  ▼                   │      │  │                 ↓                   │  │
+│  ┌───────────────────────────────┐   │      │  │          control output              │  │
+│  │ driftmodel sensor node        │   │      │  └─────────────────┬───────────────────┘  │
+│  └───────────────┬───────────────┘   │      │                    │                      │
+│                  │ ROS 2 topics      │      │              USB CDC serial               │
+│                  └───────────────────┼──────┼────────────────────┼──────────────────────┤
+│                                      │      │                    ▼                      │
+│  New camera / IMU acquisition path  │      │  ┌──────────── STM32 controller ─────────┐ │
+│  ┌───────────────────────────────┐   │      │  │ USB CDC ↔ control / telemetry        │ │
+│  │ Fixed camera                  │   │      │  │                                      │ │
+│  │ Rotating camera               │   │      │  │ ADC: transmitter steering/throttle   │ │
+│  │ ISM330DHCX IMU                │   │      │  │ DAC: laptop commands to transmitter │ │
+│  └───────────────┬───────────────┘   │      │  │ GPIO: manual / laptop mode selection │ │
+│                  ▼                   │      │  └──────────────────┬───────────────────┘ │
+│  ┌───────────────────────────────┐   │      │                     │                     │
+│  │ sensor_publisher              │   │      │                     ▼                     │
+│  │ camera + raw IMU publishers    │   │      │            RC transmitter interface       │
+│  └───────────────┬───────────────┘   │      │                                             │
+│                  │ ROS 2 topics      │      └─────────────────────────────────────────────┘
+│                  └───────────────────┼──────► rosbag recording / offline analysis
+└──────────────────────────────────────┘
+~~~
+
+The diagram shows two separate sensor paths on the Raspberry Pi:
+
+- **Vehicle sensor path (driftmodel):** the existing vehicle sensor node publishes the data used by the laptop-side ROS 2 software. The Raspberry Pi and laptop exchange ROS 2 messages over the network.
+- **Camera / IMU path (sensor_publisher):** the fixed camera, steering-linked rotating camera, and ISM330DHCX publish /camera/fixed/image_raw, /camera/rotating/image_raw, and /imu/data_raw. These streams have been recorded together in a ROS 2 bag and are currently being evaluated offline. They are not yet integrated into the existing DAgger perception or control pipeline.
+
+The laptop communicates with the STM32F401CCU6 over USB CDC. The STM32 reads steering and throttle signals from the RC transmitter through ADC and outputs analog steering and throttle commands through two MCP4725 DACs. GPIO inputs select manual transmitter control or laptop-command mode. The STM32 is the radio-interface controller; it is not a ROS 2 node.
+
+The STM32 firmware is carried over from the Noetic setup. The ROS 2 port primarily updates the Raspberry Pi and laptop software. The STM32 project includes its CubeMX configuration, application source, HAL/CMSIS drivers, USB CDC middleware, and the MCP4725 driver. IDE workspace metadata and compiled Debug output are excluded.
 
 Differences from the Noetic layout:
 
