@@ -66,7 +66,7 @@ The message header uses a capture-related timestamp rather than the time the ROS
 - **IMU:** the kernel timestamp of the GPIO 23 INT1 rising-edge event. This is the data-ready event time; it is not guaranteed to be the exact internal sampling instant or the midpoint of the sensor's measurement interval.
 - **Cameras:** the V4L2 buffer timestamp associated with the frame, before JPEG decode. It represents the driver's frame timestamp and should not be interpreted as a measured exposure midpoint.
 
-Kernel event times are on `CLOCK_REALTIME` or `CLOCK_MONOTONIC` depending on the driver. The nodes check which one gives a plausible age (up to 50 ms for the IMU, 200 ms for the cameras) and use it. If neither fits, the node falls back to the time of reading and prints a warning; the warning means the stamps of that stream are late and jittery.
+Kernel event times are on `CLOCK_REALTIME` or `CLOCK_MONOTONIC` depending on the driver. The nodes check which clock gives a plausible event age (up to 50 ms for the IMU and 200 ms for cameras). Camera frames whose V4L2 timestamp cannot be mapped to a known clock within the allowed age are dropped and a warning is printed; they are not published with a substitute read-time stamp. This avoids mixing capture timestamps with delayed read-time timestamps in the camera stream.
 
 The V4L2 time is the start of the frame, not the middle of the exposure, and the USB transfer adds a small delay. A constant shift can be applied with the `fixed_time_offset_s` and `rotating_time_offset_s` parameters once the camera-to-IMU offset has been measured (positive values move the stamps later). The offset itself is not measured by this package.
 
@@ -108,9 +108,11 @@ The steering is turned with the transmitter wheel (left side of the picture). Th
 
 ### Camera settings
 
-The source defaults to **640 x 480** and **30 FPS** per camera. It requests **MJPEG** from each V4L2 device, decodes frames as grayscale, and publishes `mono8` images. The capture loops are paced by the cameras: each loop waits for the next frame.
+The source defaults to **640 x 480** and requests **30 FPS** per camera using **MJPEG**. The driver may accept a different rate depending on the exact format and resolution. On the two OV9281 cameras tested in this setup, `v4l2-ctl --list-formats-ext` reported these modes: MJPG 1280 x 720 at 120/60/30/25 FPS, MJPG 640 x 480 at 120 FPS, and YUYV 640 x 480 at 30 FPS. During the latest dual-camera run, both 640 x 480 MJPG devices accepted 120 FPS even though 30 FPS was requested.
 
-Some cameras ignore the requested frame rate and deliver more (the OV9281 boards can run at 60 or 120 FPS). The `max_fps` parameter limits the published rate by dropping the extra frames before they are decoded, which saves CPU and network bandwidth. Every 5 seconds the node prints the published frame rate and the rate the camera delivers. If the driver does not accept the requested `fps`, a warning shows the rate it accepted. The modes a camera offers can be listed with `v4l2-ctl -d /dev/video0 --list-formats-ext`.
+The `max_fps` parameter limits the published rate to 30 FPS by dropping extra captured frames before JPEG decoding. Thus, the current configuration captures at about 120 FPS but publishes at about 30 FPS. This is a deliberate choice to retain MJPEG compression and avoid the much higher USB payload of uncompressed YUYV. At 640 x 480, YUYV 4:2:2 carries 2 bytes per pixel: about 18.4 MB/s per camera at 30 FPS, or 36.9 MB/s for two cameras (about 295 Mbps, before USB protocol overhead). The two USB camera streams may share the available USB bus bandwidth, so changing both to YUYV should only be considered after measuring the actual USB topology and sustained transfer behavior. MJPEG bandwidth varies with image content and compression.
+
+Every 5 seconds the node prints the published frame rate and the camera capture rate. A warning shows the rate accepted by the driver when it differs from the requested `fps`. The modes offered by each device can be listed with `v4l2-ctl -d /dev/video0 --list-formats-ext` and `v4l2-ctl -d /dev/video2 --list-formats-ext`.
 
 | Parameter | Default | Description |
 |---|---|---|
@@ -118,7 +120,7 @@ Some cameras ignore the requested frame rate and deliver more (the OV9281 boards
 | `rotating_device` | `/dev/video2` | Rotating camera device |
 | `width`, `height` | `640`, `480` | Frame size |
 | `fps` | `30` | Requested frame rate |
-| `max_fps` | `30.0` | Limit of the published frame rate, `0` = no limit |
+| `max_fps` | `30.0` | Limit of the published frame rate, `0` = no limit; extra frames are dropped before decode |
 | `fixed_time_offset_s` | `0.0` | Constant stamp shift for the fixed camera |
 | `rotating_time_offset_s` | `0.0` | Constant stamp shift for the rotating camera |
 
