@@ -114,7 +114,17 @@ See the [`sensor_publisher` README](sensor_publisher/README.md) for the paramete
 
 #### IMU
 
-The ISM330DHCX driver currently uses I2C bus 0 and address `0x6A`. The sensor INT1 pin is wired to GPIO 23 (header pin 16), and the node needs libgpiod:
+The ISM330DHCX driver uses I2C bus 0 and address `0x6A`. The sensor INT1 pin is wired to Raspberry Pi GPIO 23 (header pin 16). The node uses libgpiod 1.x to wait for rising-edge events on this line:
+
+1. The IMU's gyroscope data-ready signal is routed to INT1.
+2. The node waits for a GPIO 23 rising-edge event instead of polling the sensor continuously.
+3. On an event, it reads the gyroscope and accelerometer output registers over I2C.
+4. The kernel event timestamp is converted to the node's ROS clock and used as the message timestamp when the clock source can be mapped.
+5. The node publishes the raw measurements on `/imu/data_raw`.
+
+If multiple edge events are queued before the node reads the sensor, the driver processes the newest event because the sensor output registers contain the latest sample; older queued events are counted as missed. The event timestamp represents the GPIO data-ready edge, not a guaranteed measurement midpoint inside the sensor.
+
+The node needs libgpiod:
 
 ```bash
 sudo apt install libgpiod-dev gpiod
@@ -155,4 +165,6 @@ The vehicle sensor packages are `driftmodel_msg` and `driftmodel`. Refer to thei
 ## Notes
 
 - Run the build and hardware checks on the Raspberry Pi after installing the dependencies.
-- Camera and IMU topics are published independently; this setup does not provide hardware synchronization between the two cameras.
+- Camera and IMU topics are published independently. Their timestamps are converted to the Raspberry Pi ROS clock, but that alone does not prove physical camera-exposure and IMU-sampling alignment.
+- The IMU publishes raw accelerometer and gyroscope values. It does not estimate orientation or apply bias calibration or a vehicle-frame axis transform.
+- The IMU is configured for 208 Hz output. This is the configured ODR, not a measured ROS publication rate; compare bag header timestamps and node rate logs when validating actual behavior.
