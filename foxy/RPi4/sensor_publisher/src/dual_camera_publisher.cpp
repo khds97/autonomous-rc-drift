@@ -293,8 +293,9 @@ private:
             int64_t frame_ns = 0;
             const ReadResult result = cam.read(gray, &frame_ns);
             if (result == ReadResult::kFrame) {
-                publish_frame(pub, gray, frame_id, frame_ns, time_offset_s);
-                ++published_count;
+                if (publish_frame(pub, gray, frame_id, frame_ns, time_offset_s)) {
+                    ++published_count;
+                }
                 ++captured_count;
             } else if (result == ReadResult::kSkipped) {
                 ++captured_count;
@@ -318,7 +319,7 @@ private:
         }
     }
 
-    void publish_frame(
+    bool publish_frame(
         image_transport::Publisher& pub,
         const cv::Mat& gray,
         const std::string& frame_id,
@@ -331,8 +332,9 @@ private:
             *this->get_clock(), frame_ns, 200000000LL, &from_kernel);
         if (!from_kernel) {
             RCLCPP_WARN_THROTTLE(this->get_logger(), *this->get_clock(), 5000,
-                "%s: frame time is not on a known clock, using the time of reading",
+                "%s: invalid kernel timestamp, dropping frame",
                 frame_id.c_str());
+            return false;
         }
         stamp = rclcpp::Time(
             stamp.nanoseconds() + static_cast<int64_t>(time_offset_s * 1e9),
@@ -343,6 +345,7 @@ private:
         msg->header.stamp    = stamp;
         msg->header.frame_id = frame_id;
         pub.publish(*msg);
+        return true;
     }
 
     V4L2Camera fixed_cam_;
