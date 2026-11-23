@@ -72,22 +72,7 @@ The V4L2 time is the start of the frame, not the middle of the exposure, and the
 
 When both timestamp paths are successfully mapped, stamps are expressed in the Raspberry Pi node clock. In the camera publisher, an invalid or unmappable kernel timestamp produces a warning and the frame is dropped; it is not published with a read-time replacement. To compare stamps from different computers, their clocks must also be synchronized (for example with chrony).
 
-### Chrony-synchronized subscriber-side capture
-
-The current timing analysis is based on the 201.17-second subscriber-side capture `sensor_sync.csv`, recorded after chrony synchronization between the Raspberry Pi and laptop had been confirmed. The CSV contains 6,036 fixed-camera rows, 6,036 rotating-camera rows, and 44,372 IMU rows.
-
-| Stream | Mean header-stamp interval | Median interval | Observed rate | Mean estimated delay | Median estimated delay |
-|---|---:|---:|---:|---:|---:|
-| Fixed camera | 33.334 ms | 32.017 ms | 30.00 Hz | 24.58 ms | 24.77 ms |
-| Rotating camera | 33.332 ms | 32.023 ms | 30.00 Hz | 26.35 ms | 25.64 ms |
-| IMU | 4.533 ms | 4.521 ms | 220.59 Hz | 7.32 ms | 5.37 ms |
-
-The rotating-minus-fixed same-index header timestamp difference had a median of 6.98 ms (5th–95th percentile: 3.01–11.06 ms; maximum absolute difference: 15.10 ms). Nearest-IMU-sample distance medians were 1.127 ms for fixed and 1.131 ms for rotating (95th percentiles: 2.148 ms and 2.154 ms). These are timestamp comparison and sample-proximity statistics, not calibrated sensor offsets or physical synchronization errors. The two camera capture threads are independent and are not hardware-trigger synchronized.
-
-The `estimated_delay_ms` column is calculated from subscriber `receive_wall_time - header_stamp`. Because this capture was recorded after chrony synchronization was confirmed, the two system clocks had a synchronized reference; however, the value still includes the complete delay from the stamped event to subscriber receipt, including processing and transport. It is not network-only latency. The `receive_monotonic` column is measured in seconds on the subscriber computer's monotonic clock and must not be directly subtracted from epoch-based `header_stamp` values.
-
-The IMU's configured output data rate is 208 Hz. The approximately 220.59 Hz value is the observed rate of extracted header timestamps and should not be treated as proof that the physical sensor samples at that rate. The earlier pre-chrony ROS 2 bag export is excluded from this current timing analysis.
-
+The measured rates, clock drift, gaps and arrival times from a recorded capture, and the chrony setup, are in the [Foxy README](../../README.md#sensor-acquisition-and-timestamp-validation). The IMU stamps show about 221 Hz although 208 Hz is configured; the sensor's internal frequency trim explains the difference.
 
 ## Cameras
 

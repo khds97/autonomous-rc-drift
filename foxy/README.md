@@ -4,7 +4,7 @@ ROS 2 Foxy version of the 1/10-scale autonomous RC drift car. The architecture i
 
 The Noetic implementation is on the `noetic` branch.
 
-**Status:** The merged `sensor_publisher` package has been built and run on the Raspberry Pi 4. The fixed camera, rotating camera, and IMU streams were captured together in the subscriber-side `sensor_sync.csv` after chrony synchronization between the Raspberry Pi and laptop had been confirmed. The CSV is used for the current timestamp and subscriber-arrival analysis. The complete vehicle system has not yet been tested as an integrated setup.
+**Status:** The merged `sensor_publisher` package has been built and run on the Raspberry Pi 4. The fixed camera, rotating camera, and IMU streams were captured together on the laptop (`sensor_timestamps.csv`) while the Raspberry Pi followed the laptop clock with chrony. That capture is used for the current timestamp and arrival analysis. The complete vehicle system has not yet been tested as an integrated setup.
 
 ## Repository layout
 
@@ -30,7 +30,7 @@ The Foxy system is distributed across three devices. The Raspberry Pi 4 acquires
 The diagram shows two separate sensor paths on the Raspberry Pi:
 
 - **Vehicle sensor path (driftmodel):** the existing vehicle sensor node publishes the data used by the laptop-side ROS 2 software. The Raspberry Pi and laptop exchange ROS 2 messages over the network.
-- **Camera / IMU path (sensor_publisher):** the fixed camera, steering-linked rotating camera, and ISM330DHCX publish /camera/fixed/image_raw, /camera/rotating/image_raw, and /imu/data_raw. These streams were captured together in the chrony-synchronized subscriber-side CSV and are currently being evaluated offline. They are not yet integrated into the existing DAgger perception or control pipeline.
+- **Camera / IMU path (sensor_publisher):** the fixed camera, steering-linked rotating camera, and ISM330DHCX publish /camera/fixed/image_raw, /camera/rotating/image_raw, and /imu/data_raw. These streams were captured together on the laptop with the Pi clock following the laptop (chrony) and are evaluated offline. They are not yet integrated into the existing DAgger perception or control pipeline.
 
 The laptop communicates with the STM32F401CCU6 over USB CDC. The STM32 reads steering and throttle signals from the RC transmitter through ADC and outputs analog steering and throttle commands through two MCP4725 DACs. GPIO inputs select manual transmitter control or laptop-command mode. The STM32 is the radio-interface controller; it is not a ROS 2 node.
 
@@ -51,7 +51,7 @@ Differences from the Noetic layout:
 The Raspberry Pi 4 `sensor_publisher` package combines the two V4L2 camera publishers and the ISM330DHCX IMU publisher.
 
 - **Cameras:** two independent USB camera streams are captured through V4L2, decoded as grayscale `mono8`, and published at a configured maximum rate. The V4L2 buffer timestamp is converted to the node's ROS clock before publication. In the tested 640 x 480 MJPG mode, both cameras accepted 120 FPS while the ROS publisher was limited to 30 FPS; invalid/unmappable camera timestamps are dropped rather than replaced with read-time stamps.
-- **IMU:** the ISM330DHCX is configured for 208 Hz accelerometer and gyroscope output. Its gyro data-ready signal is routed to INT1; the Raspberry Pi detects the GPIO 23 rising edge through libgpiod, reads the sensor over I2C, converts the kernel event timestamp to ROS time, and publishes `sensor_msgs/Imu` on `/imu/data_raw`.
+- **IMU:** the ISM330DHCX is configured for 208 Hz accelerometer and gyroscope output (the measured stamp rate is about 221 Hz, see below). Its gyro data-ready signal is routed to INT1; the Raspberry Pi detects the GPIO 23 rising edge through libgpiod, reads the sensor over I2C, converts the kernel event timestamp to ROS time, and publishes `sensor_msgs/Imu` on `/imu/data_raw`.
 - **Clock handling:** the camera and IMU timestamp paths convert kernel timestamps to the same Raspberry Pi ROS clock when the kernel clock source can be identified. For camera frames, an invalid or implausibly old V4L2 timestamp causes the frame to be dropped with a warning; the camera publisher does not substitute the read time. A common ROS clock enables timestamp comparison but does not establish physical sensor synchronization.
 - **Scope:** this timestamp strategy enables offline comparison of message timestamps. It does not establish hardware synchronization between the two cameras, nor does it prove the physical camera exposure midpoint is aligned with the IMU sampling instant.
 
@@ -61,25 +61,47 @@ The two OV9281 camera devices tested on the Raspberry Pi 4 reported MJPG 1280 x 
 
 YUYV 640 x 480 at 30 FPS requires approximately 18.4 MB/s per camera (36.9 MB/s for two cameras, about 295 Mbps before USB overhead). Because USB camera streams can share an upstream bus, the current MJPG configuration is retained rather than switching both cameras to YUYV without sustained bandwidth testing. MJPEG transfer bandwidth is content- and compression-dependent.
 
-### Chrony-synchronized subscriber capture: `sensor_sync.csv`
+### Time synchronization between the Raspberry Pi and the laptop
 
-The current timing analysis uses the 201.17-second subscriber-side capture `sensor_sync.csv`, recorded after chrony synchronization between the Raspberry Pi and laptop had been confirmed. The Raspberry Pi's chrony source showed the laptop (`10.42.0.1`) as the selected source (`^*`) during the synchronized setup. This provides a common system-clock basis for comparing the Pi message timestamps with laptop receive times; it does not establish physical synchronization between camera exposure and IMU sampling.
+Pi stamps can only be compared with laptop times when both clocks agree. The Pi follows the laptop over the Wi-Fi hotspot (laptop `10.42.0.1`). Following a distant internet server over this link left the Pi clock swinging by about +-200 ms.
 
-The CSV contains 6,036 fixed-camera rows, 6,036 rotating-camera rows, and 44,372 IMU rows.
+Laptop (`ntpd`, `/etc/ntp.conf`):
 
-| Stream | Mean header-stamp interval | Observed rate | Mean estimated delay | Median estimated delay |
+```text
+restrict 10.42.0.0 mask 255.255.255.0 nomodify notrap
+# optional, when the laptop has no upstream source: serve its own clock
+server 127.127.1.0
+fudge 127.127.1.0 stratum 10
+```
+
+Raspberry Pi (`/etc/chrony/chrony.conf`, with the default `pool` lines commented out):
+
+```text
+server 10.42.0.1 iburst minpoll 3 maxpoll 5
+makestep 0.1 3
+```
+
+Check before recording: `chronyc sources -v` on the Pi must show the laptop as the selected source (`^*`) with `Reach 377`, and `chronyc tracking` shows the current offset. On the laptop, `ntpq -p` should show a system peer; without one `ntpd` may stop serving usable time, which the local-clock fallback above avoids.
+
+### Timestamp capture: `sensor_timestamps.csv`
+
+The timing analysis uses a 245.6-second capture recorded on the laptop while the Pi followed the laptop clock. Each row has `topic`, `header_timestamp_ns` (the Pi stamp) and `receive_monotonic_ns` (the laptop's monotonic clock at receipt). The file holds 54,255 IMU rows and 7,368 rows for each of `/camera/fixed/image_raw/compressed` and `/camera/rotating/image_raw/compressed`. The monotonic receive time is not on the epoch clock of the stamps, so the file gives intervals, drift and relative arrival times, not an absolute delay or clock offset (use `chronyc tracking` for that).
+
+| Stream | Rows | Mean stamp interval | Median stamp interval | Observed rate |
 |---|---:|---:|---:|---:|
-| Fixed camera | 33.334 ms | 30.00 Hz | 24.58 ms | 24.77 ms |
-| Rotating camera | 33.332 ms | 30.00 Hz | 26.35 ms | 25.64 ms |
-| IMU | 4.533 ms | 220.59 Hz | 7.32 ms | 5.37 ms |
+| Fixed camera | 7,368 | 33.334 ms | 32.018 ms | 30.00 Hz |
+| Rotating camera | 7,368 | 33.333 ms | 32.023 ms | 30.00 Hz |
+| IMU | 54,255 | 4.527 ms | 4.522 ms | 220.91 Hz |
 
-The mean header-stamp intervals indicate approximately 30 Hz camera streams and approximately 220.6 Hz IMU event timestamps. The IMU's configured output data rate is 208 Hz; the observed timestamp rate is not proof that the physical sensor samples at 220.6 Hz, so the difference remains to be investigated.
+- **Clock drift:** the lower envelope of (receive time - stamp) in 10-second windows has a slope of -1.2 ppm for the IMU, -2.1 ppm for the fixed camera and -1.1 ppm for the rotating camera. The envelope stays within +-1.4 ms over the capture and shows no steps.
+- **Stamp regularity:** IMU stamp intervals have a standard deviation of 0.19 ms, while their receipt intervals have 1.8 ms, so the stamps do not follow the Wi-Fi jitter. Camera stamp intervals vary between about 20 and 48 ms (standard deviation 3.5 ms) around the 33.3 ms mean. No stamp goes backwards in any stream.
+- **Missing IMU samples:** estimated from gaps in the stamps, 64 of 54,319 samples (0.12 %) in 54 gap events. No gap occurs in the last 90 seconds. Neither camera stream lost frames (mean stamp interval 33.33 ms).
+- **IMU rate:** the nominal output rate is 208.34 Hz, but the stamps show about 221 Hz. The `INTERNAL_FREQ_FINE` register (`0x63`, 0.15 % per step) of this sensor reads `0x29` (+41 steps, +6.15 %), and 208.34 Hz x 1.0615 is about 221 Hz. Read it with `i2cget -y 0 0x6A 0x63`. The observed rate is not a measured sampling clock, only the rate of the data-ready edges.
+- **Fixed and rotating cameras:** the same-index stamp difference (rotating minus fixed) has a median of 9.42 ms (1st to 99th percentile: 1.39 to 13.42 ms; maximum 21.21 ms). Only 3.7 % of the pairs are within 5 ms and 67 % within 10 ms. An earlier capture gave a median of 9.17 ms. The two capture threads run freely, so this offset is a phase that changes between runs; it is not hardware synchronization.
+- **Camera and IMU stamps:** the nearest IMU sample to a frame stamp has a median distance of 1.13 ms (99th percentile 2.24 ms). This is only the IMU spacing; it says nothing about the real exposure offset.
+- **Arrival at the laptop:** relative to IMU samples with the same stamp, camera frames arrive a median of 15.7 ms (fixed) and 12.2 ms (rotating) later. When a frame arrives, the IMU samples covering its stamp have not all arrived yet for 0.57 % (fixed) and 0.86 % (rotating) of the frames, so a consumer should wait for the IMU instead of assuming it is already there.
 
-In a same-index comparison, the rotating-camera header timestamp was later than the fixed-camera timestamp by a median of 6.98 ms (5th percentile: 3.01 ms; 95th percentile: 11.06 ms; maximum absolute difference: 15.10 ms). The nearest-IMU-sample distance had a median of 1.127 ms for fixed and 1.131 ms for rotating; the 95th percentiles were 2.148 ms and 2.154 ms, respectively. These are timestamp comparison and sample-proximity statistics, not calibrated sensor offsets or physical synchronization errors. The two camera capture threads are independent and are not hardware-trigger synchronized.
-
-The `estimated_delay_ms` column is calculated as subscriber `receive_wall_time` minus message `header_stamp`. Since this capture was recorded after chrony synchronization was confirmed, the comparison uses synchronized system clocks; nevertheless, the value represents the full header-to-subscriber-receipt delay, including processing and transport, and is not network-only latency. The `receive_monotonic` column is in seconds on the subscriber computer's monotonic clock and must not be directly subtracted from epoch-based `header_stamp` values.
-
-This CSV is the current dataset used for subscriber-side timing and arrival analysis. The earlier pre-chrony ROS 2 bag export is excluded from the current timing results.
+These are timestamp statistics. They do not establish physical synchronization between the cameras or between the cameras and the IMU. The `/ctrl_val` and `/sensors` streams are not part of this capture.
 
 
 ## Device-specific setup
@@ -251,7 +273,7 @@ I reviewed the Noetic code together with its recorded dataset (12,401 samples, 4
 
 | Part | Status |
 |---|---|
-| Raspberry Pi 4: `sensor_publisher` | Merged package built and launched on the Pi. Both camera topics and `/imu/data_raw` were recorded together in a ROS 2 bag; message counts and camera timestamp-interval statistics are documented above. Quantitative camera-to-IMU offset analysis is still pending |
+| Raspberry Pi 4: `sensor_publisher` | Merged package built and launched on the Pi. Both camera topics and `/imu/data_raw` were recorded together on the laptop (`sensor_timestamps.csv`); rates, drift, gaps and arrival times are documented above. The camera-to-IMU offset is still not measured |
 | Wheel speed and motor hall decoding (`wheelSpeed.hpp`) | Unit tests on a PC with synthetic pulses: 600-3000 rpm, tick wrap, timeout, late pulse, 4 wheels at different speeds, zero on stop |
 | `driver`, `pwm`, `ADS1115`, `I2Cdev` | Compiled with `-Wall -Wextra`. `driver` was linked and run against a stub pigpio |
 | Preprocessing, training, DAgger loop, USB parser, environment | Python tests with a fake serial port, a fake environment and stubbed ROS modules. Training was run on the old Noetic data converted to the new format |
