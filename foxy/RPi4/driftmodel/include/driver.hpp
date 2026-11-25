@@ -1,7 +1,9 @@
 #ifndef DRIVER_HPP_
 #define DRIVER_HPP_
 
+#include <atomic>
 #include <memory>
+#include <thread>
 #include <vector>
 
 #include "ADS1115.h"
@@ -41,7 +43,13 @@ private:
   std::shared_ptr<ADS1115> adc0_;
 
   std::vector<int> callback_ids_;
-  float last_current_;
+
+  // The ADS1115 read blocks for about 10 ms, so it runs in its own thread and sample() only
+  // returns the latest value. This keeps the publish timer and its timestamp free of the delay.
+  void adcLoop();
+  std::thread adc_thread_;
+  std::atomic<bool> adc_running_;
+  std::atomic<float> last_current_;
 };
 
 #endif  // DRIVER_HPP_

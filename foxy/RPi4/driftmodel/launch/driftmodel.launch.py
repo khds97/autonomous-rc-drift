@@ -12,7 +12,7 @@ def generate_launch_description():
             name='driftmodel_node',
             output='screen',
             parameters=[{
-                'publish_rate_hz': 34.0,
+                'publish_rate_hz': 60.0,
                 'speed_window_s': 0.1,
                 'motor_counts_per_rev': 6.0,
                 'magnets_per_wheel': 8.0,

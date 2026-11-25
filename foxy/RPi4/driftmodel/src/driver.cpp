@@ -1,5 +1,6 @@
 #include <pigpiod_if2.h>
 
+#include <chrono>
 #include <cstdio>
 #include <iostream>
 #include <memory>
@@ -7,8 +8,22 @@
 #include "driver.hpp"
 
 driver::driver()
-: m_pigpio_handle(-1), last_current_(0.0f)
+: m_pigpio_handle(-1), adc_running_(false), last_current_(0.0f)
 {
+}
+
+void driver::adcLoop()
+{
+  while (adc_running_) {
+    float volts = 0.0f;
+    // readVoltage() waits for the conversion, so this loop runs at the ADC rate.
+    // The last good value is kept when a read fails.
+    if (adc0_->readVoltage(0, &volts)) {
+      last_current_ = volts;
+    } else {
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));   // do not spin on errors
+    }
+  }
 }
 
 driver::~driver()
@@ -87,6 +102,9 @@ int driver::init()
     callback_ids_.push_back(id);
   }
 
+  adc_running_ = true;
+  adc_thread_ = std::thread(&driver::adcLoop, this);
+
   return 0;
 }
 
@@ -102,11 +120,7 @@ driver::data driver::sample()
   d.rl_speed = wheelSpeed_->getWheel(wheelSpeed::RL);
   d.rr_speed = wheelSpeed_->getWheel(wheelSpeed::RR);
 
-  float volts = 0.0f;
-  if (adc0_->readVoltage(0, &volts)) {
-    last_current_ = volts;
-  }
-  d.current = last_current_;   // keep the last good value when a read fails
+  d.current = last_current_;   // latest value from the ADC thread
 
   d.tire_pwm = pwm_->getTire();
 
@@ -118,6 +132,11 @@ int driver::deinit()
   if (m_pigpio_handle < 0) {
     return 0;
   }
+  adc_running_ = false;
+  if (adc_thread_.joinable()) {
+    adc_thread_.join();
+  }
+
   for (int id : callback_ids_) {
     callback_cancel(id);
   }

@@ -11,7 +11,7 @@
 // ROS 2 node that publishes the vehicle sensor data on `sensors`.
 //
 // Parameters:
-//   publish_rate_hz       publish rate (default 34.0)
+//   publish_rate_hz       publish rate (default 60.0)
 //   speed_window_s        averaging window of the speed estimate (default 0.1)
 //   motor_counts_per_rev  encoder steps per motor revolution (default 6.0)
 //   magnets_per_wheel     magnets on one wheel = pulses per wheel revolution (default 8.0)

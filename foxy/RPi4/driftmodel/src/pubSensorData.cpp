@@ -9,7 +9,7 @@
 pubSensorData::pubSensorData(std::shared_ptr<driver> driver)
 : rclcpp::Node("driftmodel_node"), driver_(std::move(driver))
 {
-  this->declare_parameter("publish_rate_hz", 34.0);
+  this->declare_parameter("publish_rate_hz", 60.0);
   this->declare_parameter("speed_window_s", 0.1);
   this->declare_parameter("motor_counts_per_rev", 6.0);
   this->declare_parameter("magnets_per_wheel", 8.0);
@@ -51,10 +51,12 @@ pubSensorData::~pubSensorData()
 
 void pubSensorData::getAllData()
 {
+  // stamp first, so the time is the start of the sampling and not the end of it
+  const rclcpp::Time stamp = this->now();
   const driver::data sensorData = driver_->sample();
 
   driftmodel_msg::msg::Sensors message;
-  message.header.stamp = this->now();
+  message.header.stamp = stamp;
   message.header.frame_id = "base_link";
   message.rpm = sensorData.rpm;
   message.tire_pwm = static_cast<int32_t>(sensorData.tire_pwm);

@@ -221,7 +221,7 @@ Offline training: `ros2 run driftmodel train_agent.py <model_path> --data_dir <d
 
 Data and models go to `~/driftmodel/data` and `~/driftmodel/dagger_models` by default.
 
-Sensor node parameters: `publish_rate_hz` (34), `speed_window_s` (0.1), `motor_counts_per_rev` (6), `magnets_per_wheel` (8), `rpm_timeout_s` (0.5).
+Sensor node parameters: `publish_rate_hz` (60), `speed_window_s` (0.1), `motor_counts_per_rev` (6), `magnets_per_wheel` (8), `rpm_timeout_s` (0.5).
 
 ## Problems found in the Noetic prototype and what changed
 
