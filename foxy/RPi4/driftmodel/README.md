@@ -2,10 +2,6 @@
 
 Sensor node of the Raspberry Pi 4. It reads the GPIO sensors through pigpio and the current sensor through an ADS1115, and publishes `/sensors` (`driftmodel_msg/msg/Sensors`) at 60 Hz by default.
 
-## System architecture
-
-![ROS 2 Foxy system architecture](../../assets/system-architecture.svg)
-
 This package depends on [`driftmodel_msg`](../driftmodel_msg/README.md). Build both in the same workspace.
 
 ## What it reads
