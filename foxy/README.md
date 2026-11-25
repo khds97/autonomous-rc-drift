@@ -177,11 +177,13 @@ ln -s ~/autonomous-rc-drift/foxy/RPi4/driftmodel \
   ~/foxy_ws/src/driftmodel
 ```
 
-Build the packages:
+Install pigpio, then build the packages. `driftmodel` depends on `driftmodel_msg`, which colcon builds first:
 
 ```bash
+sudo apt install pigpio libpigpiod-if-dev
+
 cd ~/foxy_ws
-colcon build
+colcon build --packages-up-to driftmodel
 source install/setup.bash
 ```
 
@@ -191,6 +193,8 @@ Start the pigpio daemon and launch the vehicle sensor node:
 sudo pigpiod
 ros2 launch driftmodel driftmodel.launch.py
 ```
+
+The Raspberry Pi and the laptop each have a `driftmodel_msg` package. Their `Sensors.msg` files must stay identical. See the [`driftmodel`](RPi4/driftmodel/README.md) and [`driftmodel_msg`](RPi4/driftmodel_msg/README.md) READMEs for the parameters, pins and troubleshooting.
 
 For the camera and IMU package build and run instructions, see [RPi4 README](RPi4/README.md).
 
