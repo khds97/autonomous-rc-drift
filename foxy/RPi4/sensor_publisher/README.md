@@ -13,8 +13,10 @@ This package publishes the two USB cameras and the ISM330DHCX IMU from the Raspb
 
 | Topic | Message type | Source |
 |---|---|---|
-| `/camera/fixed/image_raw` | `sensor_msgs/Image` (mono8) | Body-fixed forward-facing camera |
-| `/camera/rotating/image_raw` | `sensor_msgs/Image` (mono8) | Steering-linked rotating camera |
+| `/camera/fixed/image_raw` | `sensor_msgs/Image` (mono8) | Fixed camera base topic |
+| `/camera/fixed/image_raw/compressed` | `sensor_msgs/CompressedImage` | Fixed camera, compressed image_transport |
+| `/camera/rotating/image_raw` | `sensor_msgs/Image` (mono8) | Rotating camera base topic |
+| `/camera/rotating/image_raw/compressed` | `sensor_msgs/CompressedImage` | Rotating camera, compressed image_transport |
 | `/imu/data_raw` | `sensor_msgs/Imu` | Angular velocity (rad/s) and linear acceleration (m/s^2), unmodified |
 
 ## Build
@@ -95,7 +97,7 @@ The steering is turned with the transmitter wheel (left side of the picture). Th
 
 ### Camera settings
 
-The source defaults to **640 x 480** and requests **30 FPS** per camera using **MJPEG**. The driver may accept a different rate depending on the exact format and resolution. On the two OV9281 cameras tested in this setup, `v4l2-ctl --list-formats-ext` reported these modes: MJPG 1280 x 720 at 120/60/30/25 FPS, MJPG 640 x 480 at 120 FPS, and YUYV 640 x 480 at 30 FPS. During the latest dual-camera run, both 640 x 480 MJPG devices accepted 120 FPS even though 30 FPS was requested.
+The source defaults to **640 x 480** and requests **30 FPS** per camera using **MJPEG**. The V4L2 MJPEG frames are decoded to `mono8` before being published on the image_transport base topics; the `compressed` transport plugin provides the corresponding `/compressed` topics. The driver may accept a different rate depending on the exact format and resolution. On the two OV9281 cameras tested in this setup, `v4l2-ctl --list-formats-ext` reported these modes: MJPG 1280 x 720 at 120/60/30/25 FPS, MJPG 640 x 480 at 120 FPS, and YUYV 640 x 480 at 30 FPS. During the latest dual-camera run, both 640 x 480 MJPG devices accepted 120 FPS even though 30 FPS was requested.
 
 The `max_fps` parameter limits the published rate to 30 FPS by dropping extra captured frames before JPEG decoding. Thus, the current configuration captures at about 120 FPS but publishes at about 30 FPS. This is a deliberate choice to retain MJPEG compression and avoid the much higher USB payload of uncompressed YUYV. At 640 x 480, YUYV 4:2:2 carries 2 bytes per pixel: about 18.4 MB/s per camera at 30 FPS, or 36.9 MB/s for two cameras (about 295 Mbps, before USB protocol overhead). The two USB camera streams may share the available USB bus bandwidth, so changing both to YUYV should only be considered after measuring the actual USB topology and sustained transfer behavior. MJPEG bandwidth varies with image content and compression.
 
