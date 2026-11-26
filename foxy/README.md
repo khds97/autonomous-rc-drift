@@ -30,7 +30,7 @@ The Foxy system is distributed across three devices. The Raspberry Pi 4 acquires
 The diagram shows two separate sensor paths on the Raspberry Pi:
 
 - **Vehicle sensor path (driftmodel):** the existing vehicle sensor node publishes the data used by the laptop-side ROS 2 software. The Raspberry Pi and laptop exchange ROS 2 messages over the network.
-- **Camera / IMU path (sensor_publisher):** the fixed camera, steering-linked rotating camera, and ISM330DHCX publish /camera/fixed/image_raw, /camera/rotating/image_raw, and /imu/data_raw as ROS 2 topics. ROS 2 DDS transports these topics to the laptop, where OpenVINS subscribes to the camera and IMU streams for visual-inertial odometry (VIO). The same streams can also be recorded with rosbag for replay and offline analysis. This OpenVINS path is separate from the existing DAgger perception and control pipeline.
+- **Camera / IMU path (sensor_publisher):** the fixed camera, steering-linked rotating camera, and ISM330DHCX publish camera images through `image_transport` and IMU data on `/imu/data_raw`. The camera publishers use `/camera/fixed/image_raw` and `/camera/rotating/image_raw` as base topics and expose the compressed transport topics `/camera/fixed/image_raw/compressed` and `/camera/rotating/image_raw/compressed`. These compressed image topics and `/imu/data_raw` are transported over ROS 2 DDS to the laptop, where the modified OpenVINS subscriber consumes them for visual-inertial odometry (VIO). The same compressed camera and IMU topics can also be recorded with rosbag for replay and offline analysis. This OpenVINS path is separate from the existing DAgger perception and control pipeline.
 
 The laptop communicates with the STM32F401CCU6 over USB CDC. The STM32 reads steering and throttle signals from the RC transmitter through ADC and outputs analog steering and throttle commands through two MCP4725 DACs. GPIO inputs select manual transmitter control or laptop-command mode. The STM32 is the radio-interface controller; it is not a ROS 2 node.
 
@@ -85,7 +85,7 @@ Check before recording: `chronyc sources -v` on the Pi must show the laptop as t
 
 ### Timestamp capture: `sensor_timestamps.csv`
 
-The timing analysis uses a 245.6-second capture recorded on the laptop while the Pi followed the laptop clock. Each row has `topic`, `header_timestamp_ns` (the Pi stamp) and `receive_monotonic_ns` (the laptop's monotonic clock at receipt). The file holds 54,255 IMU rows and 7,368 rows for each of `/camera/fixed/image_raw/compressed` and `/camera/rotating/image_raw/compressed`. The monotonic receive time is not on the epoch clock of the stamps, so the file gives intervals, drift and relative arrival times, not an absolute delay or clock offset (use `chronyc tracking` for that).
+The timing analysis uses a 245.6-second capture recorded on the laptop while the Pi followed the laptop clock. Each row has `topic`, `header_timestamp_ns` (the Pi stamp) and `receive_monotonic_ns` (the laptop's monotonic clock at receipt). The file holds 54,255 IMU rows and 7,368 rows for each compressed image transport topic: `/camera/fixed/image_raw/compressed` and `/camera/rotating/image_raw/compressed`. The monotonic receive time is not on the epoch clock of the stamps, so the file gives intervals, drift and relative arrival times, not an absolute delay or clock offset (use `chronyc tracking` for that).
 
 | Stream | Rows | Mean stamp interval | Median stamp interval | Observed rate |
 |---|---:|---:|---:|---:|
