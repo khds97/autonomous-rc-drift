@@ -23,14 +23,14 @@ foxy/
 
 ## System architecture
 
-The Foxy system is distributed across three devices. The Raspberry Pi 4 acquires vehicle and perception sensor data, the laptop runs the DAgger-based software and communicates with the RC transmitter interface, and the STM32 controller handles the low-level analog signal interface.
+The Foxy system is distributed across three devices. The Raspberry Pi 4 acquires vehicle, camera, and IMU data and publishes ROS 2 topics. The laptop runs the DAgger-based software, subscribes to the camera and IMU topics with OpenVINS for visual-inertial odometry, records sensor data with rosbag, and communicates with the RC transmitter interface. The STM32 controller handles the low-level analog signal interface.
 
 ![ROS 2 Foxy system architecture](assets/system-architecture.svg)
 
 The diagram shows two separate sensor paths on the Raspberry Pi:
 
 - **Vehicle sensor path (driftmodel):** the existing vehicle sensor node publishes the data used by the laptop-side ROS 2 software. The Raspberry Pi and laptop exchange ROS 2 messages over the network.
-- **Camera / IMU path (sensor_publisher):** the fixed camera, steering-linked rotating camera, and ISM330DHCX publish /camera/fixed/image_raw, /camera/rotating/image_raw, and /imu/data_raw. These streams were captured together on the laptop with the Pi clock following the laptop (chrony) and are evaluated offline. They are not yet integrated into the existing DAgger perception or control pipeline.
+- **Camera / IMU path (sensor_publisher):** the fixed camera, steering-linked rotating camera, and ISM330DHCX publish /camera/fixed/image_raw, /camera/rotating/image_raw, and /imu/data_raw as ROS 2 topics. ROS 2 DDS transports these topics to the laptop, where OpenVINS subscribes to the camera and IMU streams for visual-inertial odometry (VIO). The same streams can also be recorded with rosbag for replay and offline analysis. This OpenVINS path is separate from the existing DAgger perception and control pipeline.
 
 The laptop communicates with the STM32F401CCU6 over USB CDC. The STM32 reads steering and throttle signals from the RC transmitter through ADC and outputs analog steering and throttle commands through two MCP4725 DACs. GPIO inputs select manual transmitter control or laptop-command mode. The STM32 is the radio-interface controller; it is not a ROS 2 node.
 
@@ -43,7 +43,7 @@ Differences from the Noetic layout:
 - Launch files are Python (`launch/*.py`). `demo.rviz` is a minimal rviz2 config (grid and odometry).
 - A separate `sensor_publisher` package under `RPi4/` publishes two grayscale camera image topics and raw accelerometer/gyroscope measurements from the ISM330DHCX. Camera V4L2 buffer timestamps and IMU GPIO data-ready event timestamps are converted to the Raspberry Pi ROS clock before publication.
 - The two camera capture threads are independent and are not hardware-trigger synchronized. A common ROS clock makes timestamp comparison possible, but does not by itself prove that the physical exposure and IMU sampling instants are aligned. The camera-to-IMU offset is still under evaluation.
-- OpenVINS/VINS integration is not currently included, and camera calibration messages are not published.
+- OpenVINS runs from a separate laptop workspace/repository and consumes the camera and IMU topics over ROS 2 DDS; its source is not part of this repository. The OpenVINS VIO output is not yet integrated into the DAgger perception/control pipeline. Camera calibration messages are not published by `sensor_publisher`.
 - The recorded data and trained models were not carried over.
 
 ## Sensor acquisition and timestamp validation
