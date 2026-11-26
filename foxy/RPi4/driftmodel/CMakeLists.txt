@@ -24,6 +24,7 @@ if(PIGPIOD_IF2)
     src/driftmodel_node.cpp
     src/driver.cpp
     src/ADS1115.cpp
+    src/I2Cdev.cpp
     src/pubSensorData.cpp
     src/pwm.cpp
     src/wheelSpeed.cpp)
