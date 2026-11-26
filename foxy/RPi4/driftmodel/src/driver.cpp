@@ -7,6 +7,9 @@
 
 #include "driver.hpp"
 
+// steering PWM signal measured by pwm (same as in the Noetic version)
+#define TIRE 21
+
 driver::driver()
 : m_pigpio_handle(-1), adc_running_(false), last_current_(0.0f)
 {
@@ -56,7 +59,7 @@ int driver::init()
   const unsigned inputs[] = {
     pins::ENCODER_A, pins::ENCODER_B, pins::ENCODER_C,
     pins::HALL_FL, pins::HALL_FR, pins::HALL_RL, pins::HALL_RR,
-    pins::TIRE};
+    TIRE};
   for (unsigned gpio : inputs) {
     set_mode(m_pigpio_handle, gpio, PI_INPUT);
   }
@@ -91,7 +94,7 @@ int driver::init()
     {pins::HALL_FR, FALLING_EDGE, wheelSpeed::_hallEx, wheelSpeed_.get()},
     {pins::HALL_RL, FALLING_EDGE, wheelSpeed::_hallEx, wheelSpeed_.get()},
     {pins::HALL_RR, FALLING_EDGE, wheelSpeed::_hallEx, wheelSpeed_.get()},
-    {pins::TIRE, EITHER_EDGE, pwm::_pulseExTire, pwm_.get()}};
+    {TIRE, EITHER_EDGE, pwm::_pulseExTire, pwm_.get()}};
   for (const Binding & b : bindings) {
     const int id = callback_ex(m_pigpio_handle, b.gpio, b.edge, b.func, b.user);
     if (id < 0) {

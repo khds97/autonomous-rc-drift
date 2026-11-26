@@ -272,7 +272,7 @@ I reviewed the Noetic code together with its recorded dataset (12,401 samples, 4
 - `Sensors.msg` also carries `fl_speed` / `fr_speed`, but the model still uses only `rl_speed` / `rr_speed` (21 features).
 - `motor_counts_per_rev = 6` is an assumption (6 steps per electrical revolution, not multiplied by the pole pairs). Check it against the motor.
 - The hall pins use the internal pull-up.
-- The PWM measurement is on GPIO 17 (`TIRE`). The Noetic version used GPIO 21.
+- The PWM measurement is on GPIO 21 (`TIRE`, defined in `driver.cpp`), as in the Noetic version.
 - `step()` waits up to 1.0 s (`sample_timeout`) for new data, and the DAgger loop stops after 20 timeouts in a row.
 
 ## Testing

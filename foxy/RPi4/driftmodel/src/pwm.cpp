@@ -1,25 +1,30 @@
 #include "pwm.hpp"
 
+std::atomic<float> pwm::pwm_tire{0.0f};
+
 pwm::pwm() {}
 
 pwm::~pwm() {}
 
-float pwm::getTire() const
+float pwm::getTire()
 {
-  return static_cast<float>(width_us_.load(std::memory_order_relaxed));
+  return pwm_tire;
 }
 
-void pwm::getTirePWM(unsigned, unsigned level, std::uint32_t tick)
+void pwm::getTirePWM(int, unsigned, unsigned level, std::uint32_t tick)
 {
+  static std::uint32_t start_tick_ = 0;
+
   if (level == 1) {
     start_tick_ = tick;
   } else if (level == 0) {
     // unsigned subtraction handles the wrap-around of the 32-bit tick counter
-    width_us_.store(tick - start_tick_, std::memory_order_relaxed);
+    pwm_tire = static_cast<float>(tick - start_tick_);
   }
 }
 
-void pwm::_pulseExTire(int, unsigned gpio, unsigned level, std::uint32_t tick, void * user)
+void pwm::_pulseExTire(int pi, unsigned gpio, unsigned level, std::uint32_t tick, void * user)
 {
-  static_cast<pwm *>(user)->getTirePWM(gpio, level, tick);
+  pwm * mySelf = static_cast<pwm *>(user);
+  mySelf->getTirePWM(pi, gpio, level, tick);
 }

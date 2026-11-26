@@ -8,9 +8,9 @@ This package depends on [`driftmodel_msg`](../driftmodel_msg/README.md). Build b
 
 | Sensor | Pin / address | Notes |
 |---|---|---|
-| Motor encoder A, B, C | GPIO 25, 7, 8 | 3-phase hall decoder, internal pull-up |
+| Motor encoder A, B, C | GPIO 7, 25, 8 | 3-phase hall decoder, internal pull-up |
 | Wheel hall sensors FL, FR, RL, RR | GPIO 19, 5, 13, 6 | One sensor and 8 magnets per wheel, internal pull-up, falling edge only |
-| Steering PWM (`tire_pwm`) | GPIO 17 | Pulse width in us |
+| Steering PWM (`tire_pwm`) | GPIO 21 | Pulse width in us |
 | ADS1115 current sensor | I2C bus 1, address 0x48, channel 0 | 128 SPS, read in a background thread |
 
 ## Requirements

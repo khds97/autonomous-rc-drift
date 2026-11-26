@@ -18,10 +18,9 @@ constexpr unsigned HALL_FL = 19;    // front-left wheel hall sensor
 constexpr unsigned HALL_FR = 5;     // front-right wheel hall sensor
 constexpr unsigned HALL_RL = 13;    // rear-left wheel hall sensor
 constexpr unsigned HALL_RR = 6;     // rear-right wheel hall sensor
-constexpr unsigned ENCODER_A = 25;  // 3-phase motor encoder (A and B only decide the count direction;
-constexpr unsigned ENCODER_B = 7;   // the motor rpm uses the absolute value)
+constexpr unsigned ENCODER_A = 7;   // 3-phase motor encoder
+constexpr unsigned ENCODER_B = 25;
 constexpr unsigned ENCODER_C = 8;
-constexpr unsigned TIRE = 17;       // steering PWM signal measured by pwm
 }  // namespace pins
 
 // Rate [counts/s] of a cumulative counter over a sliding time window.
