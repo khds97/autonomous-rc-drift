@@ -162,6 +162,16 @@ Connect both cameras before starting the publisher.
 
 The vehicle sensor packages are `driftmodel_msg` and `driftmodel`. Refer to their package-specific instructions before starting the sensor node.
 
+## Sending camera and IMU data to the laptop
+
+The camera and IMU publishers expose standard ROS 2 topics:
+
+- `/camera/fixed/image_raw`
+- `/camera/rotating/image_raw`
+- `/imu/data_raw`
+
+With the Raspberry Pi 4 and laptop configured to use the same ROS 2 DDS domain and a network interface that allows DDS discovery and traffic, these topics can be subscribed to directly on the laptop. OpenVINS runs separately on the laptop and consumes the camera and IMU streams for visual-inertial odometry. The same topics can also be recorded with rosbag for replay and offline analysis. OpenVINS is maintained outside this repository and its VIO output is not currently connected to the DAgger control pipeline.
+
 ## Notes
 
 - Run the build and hardware checks on the Raspberry Pi after installing the dependencies.
