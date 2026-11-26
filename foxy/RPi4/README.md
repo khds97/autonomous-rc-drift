@@ -151,10 +151,14 @@ Start the dual-camera publisher:
 ros2 launch sensor_publisher dual_camera.launch.py
 ```
 
-Image topics:
+Image transport topics:
 
-- `/camera/fixed/image_raw`
-- `/camera/rotating/image_raw`
+- Base topic: `/camera/fixed/image_raw`
+- Compressed transport: `/camera/fixed/image_raw/compressed`
+- Base topic: `/camera/rotating/image_raw`
+- Compressed transport: `/camera/rotating/image_raw/compressed`
+
+The camera publisher decodes the V4L2 MJPEG frames to `mono8` images and publishes them with `image_transport`. The compressed topics are provided by the `compressed` transport plugin; they are not separate camera nodes.
 
 Connect both cameras before starting the publisher.
 
@@ -164,13 +168,13 @@ The vehicle sensor packages are `driftmodel_msg` and `driftmodel`. Refer to thei
 
 ## Sending camera and IMU data to the laptop
 
-The camera and IMU publishers expose standard ROS 2 topics:
+The Raspberry Pi publishes the camera base topics with `image_transport` and publishes IMU data on `/imu/data_raw`:
 
-- `/camera/fixed/image_raw`
-- `/camera/rotating/image_raw`
-- `/imu/data_raw`
+- `/camera/fixed/image_raw/compressed` — fixed camera image
+- `/camera/rotating/image_raw/compressed` — rotating camera image
+- `/imu/data_raw` — IMU measurements
 
-With the Raspberry Pi 4 and laptop configured to use the same ROS 2 DDS domain and a network interface that allows DDS discovery and traffic, these topics can be subscribed to directly on the laptop. OpenVINS runs separately on the laptop and consumes the camera and IMU streams for visual-inertial odometry. The same topics can also be recorded with rosbag for replay and offline analysis. OpenVINS is maintained outside this repository and its VIO output is not currently connected to the DAgger control pipeline.
+The compressed image transport topics and IMU topic are transported over ROS 2 DDS to the laptop. The modified OpenVINS subscriber on the laptop consumes the `sensor_msgs/CompressedImage` camera streams and the `sensor_msgs/Imu` stream for visual-inertial odometry. The same topics can also be recorded with rosbag for replay and offline analysis. OpenVINS is maintained outside this repository and its VIO output is not currently connected to the DAgger control pipeline.
 
 ## Notes
 
