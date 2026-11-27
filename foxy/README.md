@@ -23,14 +23,14 @@ foxy/
 
 ## System architecture
 
-The Foxy system is distributed across three devices. The Raspberry Pi 4 acquires vehicle, camera, and IMU data and publishes ROS 2 topics. The laptop runs the DAgger-based software, subscribes to the camera and IMU topics with OpenVINS for visual-inertial odometry, records sensor data with rosbag, and communicates with the RC transmitter interface. The STM32 controller handles the low-level analog signal interface.
+The Foxy system is distributed across three devices. The Raspberry Pi 4 acquires vehicle, camera, and IMU data and publishes ROS 2 topics. The laptop runs the DAgger-based software and, separately, an OpenVINS VIO pipeline that subscribes to the camera and IMU topics. It also records sensor data with rosbag and communicates with the RC transmitter interface. The STM32 controller handles the low-level analog signal interface.
 
 ![ROS 2 Foxy system architecture](assets/system-architecture.svg)
 
 The diagram shows two separate sensor paths on the Raspberry Pi:
 
 - **Vehicle sensor path (driftmodel):** the existing vehicle sensor node publishes the data used by the laptop-side ROS 2 software. The Raspberry Pi and laptop exchange ROS 2 messages over the network.
-- **Camera / IMU path (sensor_publisher):** the fixed camera, steering-linked rotating camera, and ISM330DHCX publish camera images through `image_transport` and IMU data on `/imu/data_raw`. The camera publishers use `/camera/fixed/image_raw` and `/camera/rotating/image_raw` as base topics and expose the compressed transport topics `/camera/fixed/image_raw/compressed` and `/camera/rotating/image_raw/compressed`. These compressed image topics and `/imu/data_raw` are transported over ROS 2 DDS to the laptop, where the modified OpenVINS subscriber consumes them for visual-inertial odometry (VIO). The same compressed camera and IMU topics can also be recorded with rosbag for replay and offline analysis. This OpenVINS path is separate from the existing DAgger perception and control pipeline.
+- **Camera / IMU path (sensor_publisher):** the fixed camera, steering-linked rotating camera, and ISM330DHCX publish camera images through `image_transport` and IMU data on `/imu/data_raw`. The camera publishers use `/camera/fixed/image_raw` and `/camera/rotating/image_raw` as base topics and expose the compressed transport topics `/camera/fixed/image_raw/compressed` and `/camera/rotating/image_raw/compressed`. These compressed image topics and `/imu/data_raw` are transported over ROS 2 DDS to the laptop, where a modified OpenVINS subscriber consumes them for visual-inertial odometry (VIO). The subscriber modification adds support for `sensor_msgs/CompressedImage`; OpenVINS itself is maintained in a separate external workspace and is not included in this repository. The same compressed camera and IMU topics can also be recorded with rosbag for replay and offline analysis. This OpenVINS path is separate from the existing DAgger perception and control pipeline.
 
 The laptop communicates with the STM32F401CCU6 over USB CDC. The STM32 reads steering and throttle signals from the RC transmitter through ADC and outputs analog steering and throttle commands through two MCP4725 DACs. GPIO inputs select manual transmitter control or laptop-command mode. The STM32 is the radio-interface controller; it is not a ROS 2 node.
 
