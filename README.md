@@ -31,7 +31,7 @@ The repository contains development work across different ROS environments:
 | Part | Status |
 |---|---|
 | Camera streaming (fixed and rotating) | Built and verified on the Raspberry Pi |
-| IMU with startup gyroscope bias calibration | Built and run on the Raspberry Pi |
+| IMU raw accelerometer and gyroscope publisher | Built and run on the Raspberry Pi; startup bias calibration is not applied by `sensor_publisher` |
 | Vehicle sensor node (wheel speed, motor speed, current) | Unit-tested on a PC, not run on the car |
 | STM32 controller firmware (multiplexer, DACs, USB) | Source in this repository, not tested with the laptop |
 | State synchronization, preprocessing, training and DAgger loop | Tested on a PC with fake inputs |
