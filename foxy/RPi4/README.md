@@ -174,7 +174,7 @@ The Raspberry Pi publishes the camera base topics with `image_transport` and pub
 - `/camera/rotating/image_raw/compressed` — rotating camera image
 - `/imu/data_raw` — IMU measurements
 
-The compressed image transport topics and IMU topic are transported over ROS 2 DDS to the laptop. The modified OpenVINS subscriber on the laptop consumes the `sensor_msgs/CompressedImage` camera streams and the `sensor_msgs/Imu` stream for visual-inertial odometry. The same topics can also be recorded with rosbag for replay and offline analysis. OpenVINS is maintained outside this repository and its VIO output is not currently connected to the DAgger control pipeline.
+The compressed image transport topics and IMU topic are transported over ROS 2 DDS to the laptop. A modified OpenVINS subscriber on the laptop consumes the `sensor_msgs/CompressedImage` camera streams and the `sensor_msgs/Imu` stream for visual-inertial odometry. The subscriber modification adds CompressedImage support; the OpenVINS source itself is maintained in a separate external workspace and is not included in this repository. The same topics can also be recorded with rosbag for replay and offline analysis. OpenVINS runs as a separate VIO pipeline, and its output is not currently connected to the DAgger control pipeline.
 
 ## Notes
 
