@@ -40,41 +40,9 @@ The repository contains development work across different ROS environments:
 
 ## System Architecture
 
-```mermaid
-flowchart LR
-  subgraph Car["On the car"]
-    subgraph Pi["Raspberry Pi 4 (ROS 2 Foxy)"]
-      CAM["dual_camera_publisher"]
-      IMU["imu_node"]
-      SEN["driftmodel sensor node"]
-    end
-    subgraph STM["STM32 controller"]
-      ADC["Transmitter sticks (ADC)"]
-      MUX["Multiplexer<br/>transmitter or laptop"]
-      DAC["2 DACs<br/>steering, throttle"]
-    end
-    CAR["Steering servo and ESC"]
-  end
-  subgraph PC["Laptop (ROS 2 Foxy)"]
-    VIO["Visual-inertial odometry<br/>(Noetic setup, not ported yet)"]
-    USB["usb_receiver node"]
-    ENV["driftmodel_env<br/>time synchronization, 21-value state"]
-    POL["Policy and DAgger loop"]
-  end
+![ROS 2 Foxy system architecture](foxy/assets/system-architecture.svg)
 
-  CAM -- "/camera/fixed/image_raw<br/>/camera/rotating/image_raw" --> VIO
-  VIO -- "/loop_fusion_node/odometry_rect" --> ENV
-  IMU -- "/imu/data_calibrated" --> ENV
-  SEN -- "/sensors" --> ENV
-  ADC --> MUX
-  MUX --> CAR
-  DAC --> MUX
-  STM -- "USB serial:<br/>steer, mode, throttle, punishment" --> USB
-  USB -- "/ctrl_val" --> ENV
-  ENV -- "state" --> POL
-  POL -- "steer, throttle" --> USB
-  USB -- "USB serial: voltages" --> DAC
-```
+The diagram shows the current ROS 2 Foxy architecture: the Raspberry Pi 4 publishes vehicle telemetry and camera/IMU data over ROS 2 DDS; the laptop runs the DAgger software, the separate OpenVINS VIO pipeline, and rosbag recording; and the STM32F401CCU6 provides the USB-connected RC transmitter signal interface. OpenVINS is not yet integrated into the DAgger perception/control pipeline, and full vehicle-system integration has not yet been validated.
 
 The Raspberry Pi and the laptop exchange the ROS 2 topics over the network (Wi-Fi).
 
