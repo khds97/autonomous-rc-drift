@@ -1,107 +1,134 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="1100" viewBox="0 0 1600 1100">
+<svg xmlns="http://www.w3.org/2000/svg" width="1800" height="1120" viewBox="0 0 1800 1120" role="img" aria-labelledby="title desc">
+<title id="title">Autonomous RC Drift Car — ROS 2 Foxy System Architecture</title>
+<desc id="desc">Distributed Raspberry Pi sensing, laptop DAgger and OpenVINS processing, and STM32 RC transmitter interface.</desc>
 <defs>
   <style>
     text{font-family:Arial,'Noto Sans',sans-serif;fill:#172033}
-    .title{font-size:34px;font-weight:700}.sub{font-size:18px;fill:#526078}
-    .device{fill:#f7f9fc;stroke:#66758b;stroke-width:2.5}
-    .deviceTitle{font-size:25px;font-weight:700}
-    .section{fill:#fff;stroke:#aab5c4;stroke-width:2}
-    .blue{fill:#eaf3ff;stroke:#4b83c3;stroke-width:2}
-    .green{fill:#eaf7f0;stroke:#4b9b72;stroke-width:2}
-    .purple{fill:#f1edff;stroke:#8065b5;stroke-width:2}
-    .orange{fill:#fff3e5;stroke:#c88a3d;stroke-width:2}
-    .label{font-size:20px;font-weight:700}.body{font-size:17px}.small{font-size:15px;fill:#526078}
-    .arrow{stroke:#34445d;stroke-width:3;fill:none;marker-end:url(#arrow)}
+    .heading{font-size:34px;font-weight:700}.subtitle{font-size:18px;fill:#64748b}
+    .device{fill:#f8fafc;stroke:#64748b;stroke-width:2.5}
+    .device-title{font-size:26px;font-weight:700}
+    .panel-title{font-size:20px;font-weight:700}
+    .node-title{font-size:18px;font-weight:700}
+    .body{font-size:16px}.small{font-size:14px;fill:#526078}
+    .muted{fill:#64748b}
+    .blue{fill:#eff6ff;stroke:#60a5fa;stroke-width:2}
+    .green{fill:#ecfdf5;stroke:#34a879;stroke-width:2}
+    .purple{fill:#f5f3ff;stroke:#9580d1;stroke-width:2}
+    .orange{fill:#fff7ed;stroke:#e5a04d;stroke-width:2}
+    .node{fill:#fff;stroke:#a8b4c4;stroke-width:1.6}
+    .arrow{fill:none;stroke:#334155;stroke-width:3;marker-end:url(#arrow)}
+    .arrow-blue{fill:none;stroke:#3979b9;stroke-width:3;marker-end:url(#arrow-blue)}
+    .arrow-green{fill:none;stroke:#26865c;stroke-width:3;marker-end:url(#arrow-green)}
+    .arrow-orange{fill:none;stroke:#c47a2c;stroke-width:3;marker-end:url(#arrow-orange)}
     .dashed{stroke-dasharray:9 7}
+    .tag{font-size:14px;font-weight:700;fill:#334155}
   </style>
-  <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="#34445d"/></marker>
+  <marker id="arrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#334155"/></marker>
+  <marker id="arrow-blue" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#3979b9"/></marker>
+  <marker id="arrow-green" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#26865c"/></marker>
+  <marker id="arrow-orange" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto"><path d="M0 0 L10 5 L0 10z" fill="#c47a2c"/></marker>
 </defs>
-<rect width="1600" height="1040" fill="#ffffff"/>
-<text x="800" y="58" text-anchor="middle" class="title">Autonomous RC Drift Car — ROS 2 Foxy System Architecture</text>
-<text x="800" y="91" text-anchor="middle" class="sub">Distributed sensing, DAgger software, and RC transmitter interface</text>
 
-<!-- Raspberry Pi -->
-<rect x="55" y="145" width="570" height="700" rx="20" class="device"/>
-<text x="340" y="190" text-anchor="middle" class="deviceTitle">Raspberry Pi 4</text>
-<rect x="90" y="220" width="500" height="255" rx="14" class="blue"/>
-<text x="340" y="258" text-anchor="middle" class="label">Existing vehicle sensor path</text>
-<rect x="125" y="285" width="430" height="72" rx="10" class="section"/>
-<text x="340" y="315" text-anchor="middle" class="label">Vehicle sensors</text>
-<text x="340" y="340" text-anchor="middle" class="small">pigpio / ADS1115 / wheel and PWM sensing</text>
-<path d="M340 357 V385" class="arrow"/>
-<rect x="125" y="390" width="430" height="62" rx="10" class="section"/>
-<text x="340" y="428" text-anchor="middle" class="label">driftmodel sensor node</text>
-<text x="340" y="464" text-anchor="middle" class="small">Existing vehicle telemetry → ROS 2 topics</text>
+<rect width="1800" height="1120" fill="#ffffff"/>
+<text x="900" y="55" text-anchor="middle" class="heading">Autonomous RC Drift Car — ROS 2 Foxy System Architecture</text>
+<text x="900" y="87" text-anchor="middle" class="subtitle">Distributed vehicle sensing · camera/IMU acquisition · DAgger · visual-inertial odometry · RC interface</text>
 
-<rect x="90" y="510" width="500" height="285" rx="14" class="green"/>
-<text x="340" y="550" text-anchor="middle" class="label">New camera / IMU acquisition path</text>
-<rect x="125" y="575" width="430" height="95" rx="10" class="section"/>
-<text x="340" y="608" text-anchor="middle" class="label">Sensor hardware</text>
-<text x="340" y="638" text-anchor="middle" class="body">Fixed camera · Rotating camera</text>
-<text x="340" y="660" text-anchor="middle" class="body">ISM330DHCX IMU</text>
-<path d="M340 670 V700" class="arrow"/>
-<rect x="125" y="705" width="430" height="62" rx="10" class="section"/>
-<text x="340" y="743" text-anchor="middle" class="label">sensor_publisher</text>
-<text x="340" y="787" text-anchor="middle" class="small">image_transport (compressed) + /imu/data_raw</text>
+<!-- Raspberry Pi device -->
+<rect x="45" y="135" width="540" height="805" rx="22" class="device"/>
+<text x="315" y="180" text-anchor="middle" class="device-title">Raspberry Pi 4</text>
+<text x="315" y="207" text-anchor="middle" class="small">Ubuntu 20.04 · ROS 2 Foxy</text>
+
+<rect x="78" y="240" width="474" height="285" rx="16" class="blue"/>
+<text x="315" y="275" text-anchor="middle" class="panel-title">Vehicle sensor path</text>
+<rect x="112" y="300" width="406" height="76" rx="10" class="node"/>
+<text x="315" y="330" text-anchor="middle" class="node-title">Vehicle sensors</text>
+<text x="315" y="354" text-anchor="middle" class="small">Wheel Hall sensors · motor encoder · PWM · ADS1115</text>
+<path d="M315 376 V405" class="arrow-blue"/>
+<rect x="112" y="410" width="406" height="75" rx="10" class="node"/>
+<text x="315" y="441" text-anchor="middle" class="node-title">driftmodel node</text>
+<text x="315" y="465" text-anchor="middle" class="small">Vehicle telemetry → ROS 2 topics</text>
+<text x="315" y="507" text-anchor="middle" class="tag">Existing vehicle-state pipeline</text>
+
+<rect x="78" y="555" width="474" height="345" rx="16" class="green"/>
+<text x="315" y="590" text-anchor="middle" class="panel-title">Camera / IMU acquisition path</text>
+<rect x="112" y="615" width="406" height="105" rx="10" class="node"/>
+<text x="315" y="646" text-anchor="middle" class="node-title">Sensor hardware</text>
+<text x="315" y="673" text-anchor="middle" class="body">Fixed camera · Steering-linked rotating camera</text>
+<text x="315" y="698" text-anchor="middle" class="body">ISM330DHCX 6-axis IMU</text>
+<path d="M315 720 V750" class="arrow-green"/>
+<rect x="112" y="755" width="406" height="92" rx="10" class="node"/>
+<text x="315" y="788" text-anchor="middle" class="node-title">sensor_publisher</text>
+<text x="315" y="814" text-anchor="middle" class="small">image_transport · GPIO data-ready · I²C</text>
+<text x="315" y="875" text-anchor="middle" class="tag">Camera: base image topics + compressed transport</text>
 
 <!-- Laptop -->
-<rect x="715" y="145" width="500" height="755" rx="20" class="device"/>
-<text x="965" y="190" text-anchor="middle" class="deviceTitle">Laptop</text>
-<rect x="755" y="220" width="420" height="365" rx="14" class="blue"/>
-<text x="965" y="260" text-anchor="middle" class="label">Existing DAgger software pipeline</text>
-<rect x="795" y="290" width="340" height="75" rx="10" class="section"/>
-<text x="965" y="321" text-anchor="middle" class="label">sync_sub</text>
-<text x="965" y="347" text-anchor="middle" class="small">ROS 2 subscriptions</text>
-<path d="M965 365 V390" class="arrow"/>
-<rect x="795" y="395" width="340" height="75" rx="10" class="section"/>
-<text x="965" y="426" text-anchor="middle" class="label">preprocess → model</text>
-<text x="965" y="452" text-anchor="middle" class="small">State processing and inference</text>
-<path d="M965 470 V495" class="arrow"/>
-<rect x="795" y="500" width="340" height="60" rx="10" class="section"/>
-<text x="965" y="537" text-anchor="middle" class="label">driftmodel_env / DAgger</text>
+<rect x="650" y="135" width="650" height="805" rx="22" class="device"/>
+<text x="975" y="180" text-anchor="middle" class="device-title">Laptop</text>
+<text x="975" y="207" text-anchor="middle" class="small">Ubuntu · ROS 2 Foxy</text>
 
-<rect x="755" y="615" width="420" height="105" rx="14" class="purple"/>
-<text x="965" y="650" text-anchor="middle" class="label">OpenVINS</text>
-<text x="965" y="680" text-anchor="middle" class="body">/camera/*/image_raw/compressed + /imu/data_raw</text>
-<text x="965" y="705" text-anchor="middle" class="small">Visual-inertial odometry (VIO)</text>
+<rect x="685" y="240" width="580" height="300" rx="16" class="blue"/>
+<text x="975" y="275" text-anchor="middle" class="panel-title">DAgger / vehicle control software</text>
+<rect x="720" y="300" width="510" height="62" rx="10" class="node"/>
+<text x="975" y="337" text-anchor="middle" class="node-title">sync_sub</text>
+<path d="M975 362 V385" class="arrow-blue"/>
+<rect x="720" y="390" width="510" height="62" rx="10" class="node"/>
+<text x="975" y="427" text-anchor="middle" class="node-title">preprocess → model inference</text>
+<path d="M975 452 V475" class="arrow-blue"/>
+<rect x="720" y="480" width="510" height="42" rx="10" class="node"/>
+<text x="975" y="507" text-anchor="middle" class="node-title">driftmodel_env / DAgger</text>
 
-<rect x="755" y="745" width="420" height="110" rx="14" class="green"/>
-<text x="965" y="780" text-anchor="middle" class="label">ROS bag recording / offline analysis</text>
-<text x="965" y="812" text-anchor="middle" class="body">Compressed camera + IMU topics</text>
-<text x="965" y="838" text-anchor="middle" class="small">Recorded for replay and evaluation</text>
+<rect x="685" y="570" width="580" height="145" rx="16" class="purple"/>
+<text x="975" y="605" text-anchor="middle" class="panel-title">OpenVINS — separate VIO pipeline</text>
+<rect x="720" y="625" width="510" height="62" rx="10" class="node"/>
+<text x="975" y="651" text-anchor="middle" class="node-title">Modified compressed-image subscriber</text>
+<text x="975" y="674" text-anchor="middle" class="small">Compressed camera streams + /imu/data_raw</text>
+
+<rect x="685" y="745" width="580" height="145" rx="16" class="green"/>
+<text x="975" y="780" text-anchor="middle" class="panel-title">Data recording and offline analysis</text>
+<rect x="720" y="800" width="510" height="62" rx="10" class="node"/>
+<text x="975" y="826" text-anchor="middle" class="node-title">rosbag recording</text>
+<text x="975" y="849" text-anchor="middle" class="small">Compressed camera topics · /imu/data_raw · vehicle topics as needed</text>
 
 <!-- STM32 -->
-<rect x="1305" y="255" width="250" height="440" rx="20" class="device"/>
-<text x="1430" y="300" text-anchor="middle" class="deviceTitle">STM32</text>
-<text x="1430" y="330" text-anchor="middle" class="small">F401CCU6</text>
-<rect x="1335" y="365" width="190" height="250" rx="12" class="orange"/>
-<text x="1430" y="405" text-anchor="middle" class="label">USB CDC</text>
-<text x="1430" y="448" text-anchor="middle" class="body">ADC</text>
-<text x="1430" y="475" text-anchor="middle" class="small">Transmitter signals</text>
-<path d="M1360 500 H1500" stroke="#c88a3d" stroke-width="1.5"/>
-<text x="1430" y="535" text-anchor="middle" class="body">MCP4725 DAC</text>
-<text x="1430" y="562" text-anchor="middle" class="small">Laptop commands</text>
-<text x="1430" y="592" text-anchor="middle" class="small">GPIO mode select</text>
-<rect x="1335" y="740" width="190" height="75" rx="12" class="orange"/>
-<text x="1430" y="770" text-anchor="middle" class="label">RC transmitter</text>
-<text x="1430" y="795" text-anchor="middle" class="small">Interface</text>
-<path d="M1430 695 V740" class="arrow"/>
+<rect x="1360" y="240" width="395" height="535" rx="22" class="device"/>
+<text x="1557" y="285" text-anchor="middle" class="device-title">STM32F401CCU6</text>
+<text x="1557" y="312" text-anchor="middle" class="small">RC transmitter signal interface</text>
+<rect x="1395" y="350" width="325" height="355" rx="16" class="orange"/>
+<rect x="1430" y="385" width="255" height="76" rx="10" class="node"/>
+<text x="1557" y="416" text-anchor="middle" class="node-title">USB CDC serial</text>
+<text x="1557" y="440" text-anchor="middle" class="small">Laptop command / telemetry</text>
+<path d="M1557 461 V490" class="arrow-orange"/>
+<rect x="1430" y="495" width="255" height="72" rx="10" class="node"/>
+<text x="1557" y="524" text-anchor="middle" class="node-title">ADC</text>
+<text x="1557" y="548" text-anchor="middle" class="small">Read transmitter signals</text>
+<path d="M1557 567 V596" class="arrow-orange"/>
+<rect x="1430" y="601" width="255" height="72" rx="10" class="node"/>
+<text x="1557" y="630" text-anchor="middle" class="node-title">MCP4725 DAC × 2</text>
+<text x="1557" y="654" text-anchor="middle" class="small">Analog steering / throttle output</text>
+<text x="1557" y="691" text-anchor="middle" class="small">GPIO selects manual / laptop mode</text>
 
-<!-- Connections -->
-<path d="M555 420 H680 V330 H795" class="arrow"/>
-<text x="680" y="310" text-anchor="middle" class="small">ROS 2 DDS</text>
-<path d="M555 735 H650 V667 H755" class="arrow"/>
-<path d="M650 735 V800 H755" class="arrow"/>
-<text x="690" y="640" text-anchor="middle" class="small">ROS 2 DDS</text>
-<text x="690" y="780" text-anchor="middle" class="small">ROS 2 DDS</text>
-<path d="M1135 530 H1250 V455 H1335" class="arrow"/>
-<path d="M1335 575 H1250 V560 H1135" class="arrow"/>
-<text x="1245" y="420" text-anchor="middle" class="small">USB CDC serial</text>
-<text x="1245" y="442" text-anchor="middle" class="small">command / telemetry</text>
+<rect x="1400" y="825" width="320" height="75" rx="14" class="orange"/>
+<text x="1560" y="855" text-anchor="middle" class="node-title">RC transmitter</text>
+<text x="1560" y="879" text-anchor="middle" class="small">Steering / throttle signal interface</text>
+<path d="M1557 705 V825" class="arrow-orange"/>
 
-<!-- Legend -->
-<rect x="75" y="950" width="1450" height="85" rx="14" fill="#f7f9fc" stroke="#d3dae4"/>
-<text x="110" y="988" class="label">Scope</text>
-<text x="225" y="988" class="body">The camera/IMU DDS path feeds OpenVINS and ROS bag; it remains separate from the DAgger control pipeline.</text>
-<text x="225" y="1017" class="small">STM32 is a hardware interface controller, not a ROS 2 node. OpenVINS VIO is separate from DAgger; full vehicle-system integration has not yet been validated.</text>
+<!-- Inter-device data links -->
+<path d="M518 447 H615 V331 H720" class="arrow-blue"/>
+<text x="620" y="308" text-anchor="middle" class="small">ROS 2 DDS</text>
+<path d="M518 800 H615 V655 H720" class="arrow-green"/>
+<path d="M615 800 V831 H720" class="arrow-green"/>
+<text x="622" y="625" text-anchor="middle" class="small">ROS 2 DDS</text>
+<text x="622" y="855" text-anchor="middle" class="small">ROS 2 DDS</text>
+
+<path d="M1230 500 H1330 V423 H1430" class="arrow-orange"/>
+<text x="1320" y="398" text-anchor="middle" class="small">USB CDC</text>
+<path d="M1430 535 H1330 V535 H1230" class="arrow-orange dashed"/>
+<text x="1320" y="560" text-anchor="middle" class="small">Telemetry</text>
+
+<!-- Network / scope notes -->
+<rect x="45" y="975" width="1710" height="105" rx="16" fill="#f8fafc" stroke="#cbd5e1" stroke-width="1.5"/>
+<text x="78" y="1013" class="panel-title">Architecture notes</text>
+<text x="310" y="1012" class="body">• Vehicle-state and camera/IMU acquisition are separate ROS 2 paths on the Raspberry Pi.</text>
+<text x="310" y="1042" class="body">• OpenVINS and rosbag consume camera/IMU data independently of the existing DAgger control pipeline.</text>
+<text x="310" y="1070" class="small">STM32 is a USB-connected hardware interface, not a ROS 2 node. End-to-end vehicle integration has not yet been validated.</text>
 </svg>
