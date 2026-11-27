@@ -1,6 +1,6 @@
 # Autonomous RC Drift Car - ROS 2 Foxy
 
-ROS 2 Foxy version of the 1/10-scale autonomous RC drift car. The architecture is the same as the ROS 1 Noetic prototype (sensor node on the Raspberry Pi 4, behavior cloning with DAgger on the laptop, STM32 board for the radio and motor commands). The code was ported and the problems found in the prototype were fixed along the way.
+ROS 2 Foxy implementation of the 1/10-scale autonomous RC drift car. This branch contains the Raspberry Pi and laptop ROS 2 packages, along with the STM32 controller firmware retained from the earlier setup. The ROS 2 software was adapted from the Noetic prototype, and several issues identified in the prototype were corrected. OpenVINS is maintained separately and is not part of this repository.
 
 The Noetic implementation is on the `noetic` branch.
 
