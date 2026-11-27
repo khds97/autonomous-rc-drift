@@ -35,7 +35,7 @@ The repository contains development work across different ROS environments:
 | Vehicle sensor node (wheel speed, motor speed, current) | Unit-tested on a PC, not run on the car |
 | STM32 controller firmware (multiplexer, DACs, USB) | Source in this repository, not tested with the laptop |
 | State synchronization, preprocessing, training and DAgger loop | Tested on a PC with fake inputs |
-| Visual-inertial odometry and slip angle estimation | Not ported to Foxy yet |
+| OpenVINS visual-inertial odometry | Runs separately on the laptop using an externally maintained OpenVINS workspace; its CompressedImage subscriber was modified for this project. VIO output is not integrated into DAgger |
 | DAgger run on the car | Not done yet |
 
 ## System Architecture
@@ -52,9 +52,8 @@ The Raspberry Pi and the laptop exchange the ROS 2 topics over the network (Wi-F
 | `/imu/data_raw`, `/imu/data_calibrated` | `sensor_msgs/Imu` | `sensor_publisher` | 208 Hz configured, about 221 Hz measured |
 | `/sensors` | `driftmodel_msg/Sensors` (motor rpm, four wheel speeds, `tire_pwm`, current) | `driftmodel` | 60 Hz (configured) |
 | `/ctrl_val` | `driftmodel_msg/CtrlVal` (steering, throttle, mode, punishment) | `usb_receiver` | 100 Hz |
-| `/loop_fusion_node/odometry_rect` | `nav_msgs/Odometry` | visual-inertial odometry | - |
 
-`driftmodel_env` joins odometry, IMU, `/sensors` and `/ctrl_val` with an `ApproximateTimeSynchronizer` (0.1 s tolerance) and builds the state. The state is standardized with a scaler that is saved next to each model, and the predicted action is de-normalized before it is sent.
+`driftmodel_env` synchronizes the DAgger inputs available to that pipeline, including IMU data, `/sensors` and `/ctrl_val`, with an `ApproximateTimeSynchronizer` (0.1 s tolerance) and builds the state. OpenVINS odometry is not currently an input to this environment. The state is standardized with a scaler that is saved next to each model, and the predicted action is de-normalized before it is sent.
 
 ## Verification
 
